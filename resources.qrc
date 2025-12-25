@@ -1,0 +1,31 @@
+<!DOCTYPE RCC>
+<RCC>
+  <qresource prefix="/">
+    <file>images/icon_user.png</file>
+    <file>images/icon_password.png</file>
+    <file>images/user.png</file>
+    <file>images/icon2.png</file>
+    <file>images/icon3.png</file>
+    <file>images/icon1.png</file>
+    <file>images/icon4.png</file>
+    <file>images/icon5.png</file>
+    <file>images/icon6.png</file>
+    <file>images/icon7.png</file>
+    <file>images/icon9.png</file>
+    <file>images/icon8.png</file>
+    <file>images/icon10.png</file>
+    <file>images/2.png</file>
+    <file>images/1.png</file>
+    <file>images/3.png</file>
+    <file>images/placeholder.png</file>
+    <file>images/9.png</file>
+    <file>images/10.png</file>
+    <file>images/7.png</file>
+    <file>images/8.png</file>
+    <file>images/6.png</file>
+  </qresource>
+  <qresource prefix="/">
+    <file>images/avatar/1.jpg</file>
+    <file>images/avatar/user.jpg</file>
+  </qresource>
+</RCC>

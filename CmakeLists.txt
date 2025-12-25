@@ -1,0 +1,146 @@
+cmake_minimum_required(VERSION 3.16)
+project(weChat VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable automatic MOC, UIC, and RCC
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+# === Qt 路径（已确认）===
+list(APPEND CMAKE_PREFIX_PATH "D:/QT/QT_x/6.5.3/mingw_64")
+
+# Find required Qt components
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
+
+if(Qt6_FOUND)
+    message(STATUS "[Qt6] Found at: ${Qt6_DIR}")
+else()
+    message(FATAL_ERROR "[Qt6] NOT FOUND! Check CMAKE_PREFIX_PATH")
+endif()
+
+# === MySQL 路径（硬编码 + 严格验证）===
+set(MYSQL_ROOT_DIR "D:/QT/QtFiles/MySQL")
+
+# --- 检查 mysql.h ---
+set(MYSQL_INCLUDE_DIR "${MYSQL_ROOT_DIR}/include")
+if(EXISTS "${MYSQL_INCLUDE_DIR}/mysql.h")
+    message(STATUS "[MySQL] mysql.h confirmed at: ${MYSQL_INCLUDE_DIR}/mysql.h")
+else()
+    message(FATAL_ERROR "[MySQL] ERROR: mysql.h NOT FOUND!\nExpected path: ${MYSQL_INCLUDE_DIR}/mysql.h")
+endif()
+
+# --- 检查 libmysql.dll (运行时必需) ---
+set(LIBMYSQL_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libmysql.dll")
+if(EXISTS "${LIBMYSQL_DLL_PATH}")
+    message(STATUS "[MySQL] libmysql.dll confirmed at: ${LIBMYSQL_DLL_PATH}")
+else()
+    message(FATAL_ERROR "[MySQL] ERROR: libmysql.dll NOT FOUND!\nExpected path: ${LIBMYSQL_DLL_PATH}")
+endif()
+
+# --- 检查 Qt MySQL 驱动 ---
+set(QT_PLUGIN_DIR "D:/QT/QT_x/6.5.3/mingw_64/plugins/sqldrivers")
+
+set(QSQLMYSQL_DLL "${QT_PLUGIN_DIR}/qsqlmysql.dll")
+if(EXISTS "${QSQLMYSQL_DLL}")
+    message(STATUS "[Qt Plugin] qsqlmysql.dll (Release) confirmed at: ${QSQLMYSQL_DLL}")
+else()
+    message(WARNING "[Qt Plugin] WARNING: qsqlmysql.dll (Release) missing!")
+endif()
+
+set(QSQLMYSQLD_DLL "${QT_PLUGIN_DIR}/qsqlmysqld.dll")
+if(EXISTS "${QSQLMYSQLD_DLL}")
+    message(STATUS "[Qt Plugin] qsqlmysqld.dll (Debug) confirmed at: ${QSQLMYSQLD_DLL}")
+else()
+    message(WARNING "[Qt Plugin] WARNING: qsqlmysqld.dll (Debug) missing!")
+endif()
+
+# === 可执行文件 ===
+add_executable(weChat
+    src/main.cpp
+    src/login/loginwindow.cpp
+    src/login/loginwindow.h
+    src/login/registerwidget.cpp
+    src/login/registerwidget.h
+    src/sql/database.h
+    src/sql/database.cpp
+    src/chat/chatwindow.cpp
+    src/chat/chatwindow.h
+    src/chat/chatwindow.ui
+    src/chat/contactmessagebubble.cpp
+    src/chat/contactmessagebubble.h
+    src/chat/messagebubble.cpp
+    src/chat/messagebubble.h
+    src/chat/networkmanager.cpp
+    src/chat/networkmanager.h
+    src/custom/meplaintextedit.cpp
+    src/custom/meplaintextedit.h
+    src/custom/clickablelabel.cpp
+    src/custom/clickablelabel.h
+    src/contact/contactmodel.cpp
+    src/contact/contactmodel.h
+    src/contact/contactdelegate.cpp
+    src/contact/contactdelegate.h
+    resources.qrc
+)
+
+# src 目录的包含设置
+target_include_directories(weChat PRIVATE 
+    ${CMAKE_SOURCE_DIR}  # 这一行很关键
+    ${MYSQL_INCLUDE_DIR}
+)
+
+# === 包含目录和链接 ===
+target_include_directories(weChat PRIVATE ${MYSQL_INCLUDE_DIR})
+
+# MinGW 不需要链接 .lib，只需 Qt 库
+target_link_libraries(weChat PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Sql
+    Qt6::Network
+)
+
+# === 输出目录 ===
+set_target_properties(weChat PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+target_compile_definitions(weChat PRIVATE QT_DEPRECATED_WARNINGS)
+
+# === 自动复制 DLL 和驱动（构建后）===
+add_custom_command(TARGET weChat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${LIBMYSQL_DLL_PATH}"
+        "$<TARGET_FILE_DIR:weChat>/libmysql.dll"
+    COMMENT "Copying libmysql.dll to output directory"
+)
+
+# 创建 sqldrivers 并复制驱动
+add_custom_command(TARGET weChat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_FILE_DIR:weChat>/sqldrivers"
+)
+
+if(EXISTS "${QSQLMYSQL_DLL}")
+    add_custom_command(TARGET weChat POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+            "${QSQLMYSQL_DLL}"
+            "$<TARGET_FILE_DIR:weChat>/sqldrivers/qsqlmysql.dll"
+        COMMENT "Copying qsqlmysql.dll (Release)"
+    )
+endif()
+
+if(EXISTS "${QSQLMYSQLD_DLL}")
+    add_custom_command(TARGET weChat POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QSQLMYSQLD_DLL}"
+            "$<TARGET_FILE_DIR:weChat>/sqldrivers/qsqlmysqld.dll"
+        COMMENT "Copying qsqlmysqld.dll (Debug)"
+    )
+endif()
+
+message(STATUS "[Build] Output directory: ${CMAKE_BINARY_DIR}/bin")
+message(STATUS "[Build] Build type: ${CMAKE_BUILD_TYPE}")
