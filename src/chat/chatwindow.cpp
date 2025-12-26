@@ -762,7 +762,7 @@ void ChatWindow::linkServer()
     connect(m_networkManager, &NetworkManager::error,
             this, &ChatWindow::onNetworkError);
 
-    // 连接到服务器 - 使用阿里云服务器,IP地址: 47.110.91.35 端口: 6452
+    // 连接到服务器 
     m_networkManager->connectToServer("47.110.91.35", 6452);
 
 }
@@ -770,6 +770,7 @@ void ChatWindow::linkServer()
 void ChatWindow::onNetworkConnected()
 {
     qDebug() << "Connected to server";
+    // 连接成功，无需认证，可以直接通信
 }
 
 void ChatWindow::onNetworkDisconnected()

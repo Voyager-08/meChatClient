@@ -1,3 +1,6 @@
+#ifndef CHATWINDOW_H
+#define CHATWINDOW_H
+
 #include <QWidget>
 #include <QMouseEvent>
 #include <QStackedWidget>
@@ -6,8 +9,6 @@
 #include <QPropertyAnimation>
 #include <QEasingCurve>
 #include "messagebubble.h"
-#ifndef CHATWINDOW_H
-#define CHATWINDOW_H
 
 namespace Ui {class ChatWindow;}
 class ContactModel;
@@ -86,18 +87,18 @@ private:
     void onMessageReceived(const QString &senderId, const QString &content, const QDateTime &time); // 处理接收消息
     void animatePageTransition(QWidget *widget); // 页面切换动画
 
-    // 网络相关函数
     void linkServer(); // 连接服务器
     void onNetworkConnected(); // 处理网络连接
     void onNetworkDisconnected(); // 处理网络断开
     void onNetworkError(const QString &error); // 处理网络错误
-    
+    void animatePageTransition(QWidget *widget); // 页面切换动画
 
 protected:
     // 鼠标事件处理函数
     ResizeMode getResizeMode(const QPoint &pos); // 获取当前鼠标所在的边缘位置
     void resizeWindow(const QPoint &globalPos); // 根据鼠标位置调整窗口大小
     void updateCursor(ResizeMode mode); // 更新鼠标光标样式
+    void animatePageTransition(QWidget *widget); // 页面切换动画
     void mousePressEvent(QMouseEvent *event) override;// 鼠标按下事件
     void mouseMoveEvent(QMouseEvent *event) override;// 鼠标移动事件
     void mouseReleaseEvent(QMouseEvent *event) override;// 鼠标释放事件
