@@ -14,12 +14,13 @@
 ChatWindow::ChatWindow(QString userID,QWidget *parent) : QWidget(parent)
     , ui(new Ui::ChatWindow)
 {
+    
     setUserId(userID);
     ui->setupUi(this);
     initUI();
     connectSignals();
     showContact();
-    
+    linkServer();
     // 初始化消息数据映射表
     messageDataMap.clear();
 }
@@ -162,7 +163,9 @@ void ChatWindow::initUI()// 初始化界面
     
     // 默认显示占位符页面
     ui->stackedWidget->setCurrentIndex(0);
+    ui->stackedWidget_2->setCurrentIndex(0);
     
+
     // 美化聊天区域
     QString frameStyle = R"(
         QFrame {
@@ -267,27 +270,13 @@ void ChatWindow::initUI()// 初始化界面
         }
     )";
     ui->placeholderLabel->setStyleSheet(placeholderStyle);
-    
-    // 连接发送按钮
-    connect(ui->sent, &QPushButton::clicked, this, &ChatWindow::sendMessage);
 
-    // 初始化网络管理器
-    m_networkManager = new NetworkManager(this);
-    connect(m_networkManager, &NetworkManager::messageReceived,
-            this, &ChatWindow::onMessageReceived);
-    connect(m_networkManager, &NetworkManager::connected,
-            this, &ChatWindow::onNetworkConnected);
-    connect(m_networkManager, &NetworkManager::disconnected,
-            this, &ChatWindow::onNetworkDisconnected);
-    connect(m_networkManager, &NetworkManager::error,
-            this, &ChatWindow::onNetworkError);
-
-    // 连接到服务器
-    m_networkManager->connectToServer("127.0.0.1", 8888); // 默认连接到本地服务器
 }
 
 void ChatWindow::connectSignals()// 连接信号槽
 {
+    // 连接发送按钮
+    connect(ui->sent, &QPushButton::clicked, this, &ChatWindow::sendMessage);
     // 最小化
     connect(ui->minimizeButton, &QPushButton::clicked, this, &QWidget::showMinimized);
     // 最大化
@@ -533,54 +522,6 @@ void ChatWindow::showMaximize()//显示最大化窗口
     isMaximize = !isMaximize;//  切换最大化状态
 }
 
-// 处理从服务器接收到的消息
-void ChatWindow::onMessageReceived(const QString &senderId, const QString &content, const QDateTime &time)
-{
-    // 检查是否是当前聊天对象的消息
-    if (senderId == receiverID) {
-        // 创建并显示接收的消息气泡
-        MessageBubble *messageBubble = new MessageBubble(MessageBubble::Other, content, time);
-        messageBubble->startAnimation(); // 启动动画效果
-
-        ui->messageVBox->setAlignment(Qt::AlignTop); // 设置布局顶部对齐
-        ui->messageVBox->addWidget(messageBubble);
-
-        // 自动滚动到底部
-        QScrollBar *scrollBar = ui->messageArea->verticalScrollBar();
-        scrollBar->setValue(scrollBar->maximum());
-
-        // 将消息添加到当前会话的消息列表中
-        Message msg;
-        msg.role = MessageBubble::Other;
-        msg.text = content;
-        msg.time = time;
-        messageDataMap[senderId].append(msg);
-    } else {
-        // 如果不是当前聊天对象的消息，可能需要在联系人列表中显示未读消息提示
-        // 这里可以添加未读消息计数逻辑
-    }
-}
-
-void ChatWindow::onNetworkConnected()
-{
-    qDebug() << "Connected to server";
-}
-
-void ChatWindow::onNetworkDisconnected()
-{
-    qDebug() << "Disconnected from server";
-}
-
-void ChatWindow::onNetworkError(const QString &error)
-{
-    qDebug() << "Network error:" << error;
-}
-
-void ChatWindow::showMessage()
-{
-
-}
-
 void ChatWindow::showContact()
 {
     Database *db = new Database();
@@ -643,11 +584,6 @@ void ChatWindow::showMoments()
 void ChatWindow::showSearch()
 {
     ui->stackedWidget->setCurrentIndex(4);
-}
-
-void ChatWindow::showMore()
-{
-
 }
 
 void ChatWindow::sendMessage() // 发送消息
@@ -774,15 +710,74 @@ void ChatWindow::onMessageClicked(const QModelIndex &index) // 点击消息
     displayContactMessages(receiverID);
 }
 
-void ChatWindow::setBackgroundImage(const QString &imagePath)
+void ChatWindow::onMessageReceived(const QString &senderId, const QString &content, const QDateTime &time)
 {
-    QString style = QString(R"(
-        ChatWindow {
-            background-image: url(%1);
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: cover;
-        }
-    )").arg(imagePath);
-    setStyleSheet(style);
+    // 检查是否是当前聊天对象的消息
+    if (senderId == receiverID) {
+        // 创建并显示接收的消息气泡
+        MessageBubble *messageBubble = new MessageBubble(MessageBubble::Other, content, time);
+        messageBubble->startAnimation(); // 启动动画效果
+
+        ui->messageVBox->setAlignment(Qt::AlignTop); // 设置布局顶部对齐
+        ui->messageVBox->addWidget(messageBubble);
+
+        // 自动滚动到底部
+        QScrollBar *scrollBar = ui->messageArea->verticalScrollBar();
+        scrollBar->setValue(scrollBar->maximum());
+
+        // 将消息添加到当前会话的消息列表中
+        Message msg;
+        msg.role = MessageBubble::Other;
+        msg.text = content;
+        msg.time = time;
+        messageDataMap[senderId].append(msg);
+    } else {
+        // 如果不是当前聊天对象的消息，可能需要在联系人列表中显示未读消息提示
+        // 这里可以添加未读消息计数逻辑
+    }
+}
+
+void ChatWindow::linkServer()
+{
+        /*
+     * 初始化网络管理器并连接信号与槽函数
+     * 设置NetworkManager实例，并将以下信号连接到对应的槽函数:
+     * - messageReceived: 当收到网络消息时触发，连接到onMessageReceived槽函数
+     * - connected: 当网络连接建立时触发，连接到onNetworkConnected槽函数
+     * - disconnected: 当网络连接断开时触发，连接到onNetworkDisconnected槽函数
+     * - error: 当网络发生错误时触发，连接到onNetworkError槽函数
+     */
+    qDebug() << "服务器连接中...";
+    m_networkManager = new NetworkManager(this);
+    //如果收到消息则调用onMessageReceived函数
+    connect(m_networkManager, &NetworkManager::messageReceived,
+            this, &ChatWindow::onMessageReceived);
+    //连接成功时调用onNetworkConnected函数
+    connect(m_networkManager, &NetworkManager::connected,
+            this, &ChatWindow::onNetworkConnected);
+    //断开连接时调用onNetworkDisconnected函数
+    connect(m_networkManager, &NetworkManager::disconnected,
+            this, &ChatWindow::onNetworkDisconnected);
+    //发生错误时调用onNetworkError函数
+    connect(m_networkManager, &NetworkManager::error,
+            this, &ChatWindow::onNetworkError);
+
+    // 连接到服务器 - 使用阿里云服务器,IP地址: 47.110.91.35 端口: 6452
+    m_networkManager->connectToServer("47.110.91.35", 6452);
+
+}
+
+void ChatWindow::onNetworkConnected()
+{
+    qDebug() << "Connected to server";
+}
+
+void ChatWindow::onNetworkDisconnected()
+{
+    qDebug() << "Disconnected from server";
+}
+
+void ChatWindow::onNetworkError(const QString &error)
+{
+    qDebug() << "Network error:" << error;
 }

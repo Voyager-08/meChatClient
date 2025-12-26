@@ -71,30 +71,33 @@ private:
 private:
     void initUI();// 初始化UI
     void connectSignals();// 连接信号槽
-    void setBackgroundImage(const QString &imagePath); // 新增设置背景图片函数
-    ResizeMode getResizeMode(const QPoint &pos); // 获取当前鼠标所在的边缘位置
-    void resizeWindow(const QPoint &globalPos); // 根据鼠标位置调整窗口大小
-    void updateCursor(ResizeMode mode); // 更新鼠标光标样式
+
+    // 窗口状态相关函数
     void showMaximize();//显示最大化窗口
     void showContact();//显示联系人列表
     void showCollect();//显示收藏界面
-    void showMessage();//显示消息
     void showMoments();//显示朋友圈
     void showSearch();//显示搜索界面
-    void showMore();//显示更多界面
     void sendMessage(); // 发送消息
     void onContactClicked(const QModelIndex &index); // 点击联系人
     void addSampleMessages(); // 添加示例消息
     void displayContactMessages(QString receiverID); // 显示联系人消息
     void onMessageClicked(const QModelIndex &index); // 点击消息
-    void loadContactMessages(QString receiverID); // 加载联系人消息（兼容旧接口）
     void onMessageReceived(const QString &senderId, const QString &content, const QDateTime &time); // 处理接收消息
+    void animatePageTransition(QWidget *widget); // 页面切换动画
+
+    // 网络相关函数
+    void linkServer(); // 连接服务器
     void onNetworkConnected(); // 处理网络连接
     void onNetworkDisconnected(); // 处理网络断开
     void onNetworkError(const QString &error); // 处理网络错误
-    void animatePageTransition(QWidget *widget); // 页面切换动画
+    
 
 protected:
+    // 鼠标事件处理函数
+    ResizeMode getResizeMode(const QPoint &pos); // 获取当前鼠标所在的边缘位置
+    void resizeWindow(const QPoint &globalPos); // 根据鼠标位置调整窗口大小
+    void updateCursor(ResizeMode mode); // 更新鼠标光标样式
     void mousePressEvent(QMouseEvent *event) override;// 鼠标按下事件
     void mouseMoveEvent(QMouseEvent *event) override;// 鼠标移动事件
     void mouseReleaseEvent(QMouseEvent *event) override;// 鼠标释放事件
