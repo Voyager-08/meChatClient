@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 	LoginWindow login;
 	if(login.exec() == QDialog::Accepted)
 	{
-		ChatWindow w(login.getUserID());
+		ChatWindow w(login.getUserId());
 		w.show();
 		app.exec();
 	}

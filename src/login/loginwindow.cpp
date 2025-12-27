@@ -29,11 +29,6 @@ LoginWindow::~LoginWindow()
 
 }
 
-QString LoginWindow::getUserID() const
-{
-    return savedUserID;
-}
-
 void LoginWindow::initUI()
 {
     // 设置窗口标题
@@ -255,7 +250,7 @@ bool LoginWindow::login()//登录功能
     }
     
     QSqlQuery query(loginDb.database());// 使用当前数据库连接创建查询对象
-    QString sql = "SELECT user_id FROM users WHERE user_id = ? AND password = ?";
+    QString sql = "SELECT user_id, user_nick FROM users WHERE user_id = ? AND password = ?";
     query.prepare(sql);
     query.addBindValue(savedUserID);
     query.addBindValue(savedPassword);
@@ -265,8 +260,7 @@ bool LoginWindow::login()//登录功能
         qDebug() << "用户ID:" << savedUserID;
         qDebug() << "密码:" << savedPassword;
         qDebug() << "登录成功!";
-        // 保存当前用户ID
-        savedUserID = query.value(0).toString();
+        savedUserID = query.value(0).toString();// 保存当前用户ID
         accept();
         // 登录成功，打开主窗口
     }

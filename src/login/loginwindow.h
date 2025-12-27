@@ -13,6 +13,15 @@
 
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
+
+struct UserInfo//用户ID, 昵称, 密码, 头像路径
+{
+    QString userID;
+    QString userName;
+    QString userPassword;
+    QString userAvatar;
+};
+
 class RegisterWidget;
 class LoginWindow : public QDialog
 {
@@ -21,7 +30,7 @@ class LoginWindow : public QDialog
 public:
     explicit LoginWindow(QDialog *parent = nullptr);
     ~LoginWindow();
-    QString getUserID() const;
+    QString getUserId() const{ return savedUserID; };
     
 //类成员变量
 private:
@@ -45,6 +54,7 @@ private:
     QString originalStyle;// 保存原始样式
     QString savedUserID;// 保存用户ID
     QString savedPassword;// 保存密码
+    QString savedUserNick; // 保存用户昵称
 
     // 动画相关
     QPropertyAnimation *m_flipAnimation;

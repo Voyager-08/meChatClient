@@ -7,6 +7,14 @@
 #include <QJsonObject>
 #include <QHostAddress>
 
+struct networkData
+{
+    QString senderId;
+    QString receiverId;
+    QString content;
+    QDateTime timestamp;
+};
+
 class NetworkManager : public QObject
 {
     Q_OBJECT
@@ -23,11 +31,11 @@ public:
  * @param port 服务器端口号
  */
     void connectToServer(const QString &host, quint16 port);
-    void sendMessage(const QString &receiverId, const QString &content, const QString &senderId);
+    void sendMessage(const networkData &data); // 发送消息结构体
     bool isConnected() const { return m_socket && m_socket->state() == QTcpSocket::ConnectedState; }
 
 signals:
-    void messageReceived(const QString &senderId, const QString &content, const QDateTime &time);
+    void messageReceived(const networkData &data);
     void connected();
     void disconnected();
     void error(const QString &errorString);
