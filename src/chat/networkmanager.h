@@ -7,12 +7,12 @@
 #include <QJsonObject>
 #include <QHostAddress>
 
-struct networkData
+struct networkData /** * @brief 网络数据结构体，用于存储网络通信中的相关信息 */
 {
-    QString senderId;
-    QString receiverId;
-    QString content;
-    QDateTime timestamp;
+    QString senderId; // /< 发送方ID，标识消息的发送者
+    QString receiverId; // /< 接收方ID，标识消息的接收者
+    QString content; // /< 消息内容，实际传输的数据
+    QDateTime timestamp; // /< 时间戳，记录消息发送或接收的时间
 };
 
 class NetworkManager : public QObject

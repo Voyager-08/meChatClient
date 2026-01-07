@@ -6,14 +6,15 @@
 #include <QList>
 #include <QString>
 
+struct Contact ;
+enum class ContactRoles ;
+
 struct Contact {//昵称、头像路径、签名
     QString name;
     QString avatarPath;//头像路径
     QString message;//个性签名
     QString id; // 联系人ID
 };
-
-// 定义自定义角色（必须在类外，且唯一）
 enum class ContactRoles {
     NameRole = Qt::UserRole + 1,      // 名字
     AvatarPathRole = Qt::UserRole + 2, // 头像路径（字符串）

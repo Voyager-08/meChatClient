@@ -37,19 +37,24 @@ void NetworkManager::connectToServer(const QString &host, quint16 port)
 
 void NetworkManager::sendMessage(const networkData &data)
 {
-    if (m_socket->state() == QTcpSocket::ConnectedState)// 检查socket是否已连接
-    {
-        QJsonObject messageObj;
-        messageObj["type"] = "message"; //  设置消息类型为"message"
-        messageObj["sender"] = data.senderId; //  设置消息发送者ID
-        messageObj["receiver"] = data.receiverId; //  设置消息接收者ID
-        messageObj["content"] = data.content; //  设置消息内容
-        messageObj["timestamp"] = data.timestamp.toString(Qt::ISODate); //  设置消息时间戳为当前时间的ISO格式字符串
-
-        QJsonDocument doc(messageObj);// 创建JSON文档对象
-        // 将JSON文档转换为字节数组并发送到服务器
-        m_socket->write(doc.toJson() + "\n"); // 添加换行符作为消息分隔符
+    if (m_socket->state() != QTcpSocket::ConnectedState) {
+        qDebug() << "网络未连接，无法发送消息！";
+        return;
     }
+
+    QJsonObject messageObj;
+    messageObj["type"] = "message";
+    messageObj["sender"] = data.senderId;
+    messageObj["receiver"] = data.receiverId;
+    messageObj["content"] = data.content;
+    messageObj["timestamp"] = data.timestamp.toString(Qt::ISODate);
+
+    QJsonDocument doc(messageObj);
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact); // 使用紧凑格式，节省带宽
+
+    qDebug() << "发送消息:" << jsonData; // qDebug 能直接打印 QByteArray
+
+    m_socket->write(jsonData + "\n"); // 发送 + 换行符
 }
 
 /**
@@ -81,14 +86,14 @@ void NetworkManager::onReadyRead()
             // 提取时间戳并转换为QDateTime对象
             QDateTime time = QDateTime::fromString(obj["timestamp"].toString(), Qt::ISODate);
             // 发送消息接收信号
-            emit messageReceived(networkData{content, receiverId, senderId, time});
+            emit messageReceived(networkData{senderId,receiverId,content,time});
         }
         // 处理用户状态变更消息
         else if (msgType == "user_status") 
         {  // 判断消息类型是否为"user_status"
-            QString userId = obj["user_id"].toString();  // 从JSON对象中获取用户ID并转换为QString类型
+            QString userID = obj["user_id"].toString();  // 从JSON对象中获取用户ID并转换为QString类型
             bool online = obj["online"].toBool();  // 从JSON对象中获取在线状态并转换为bool类型
-            emit userStatusChanged(userId, online);  // 发射用户状态变更信号，传递用户ID和在线状态
+            emit userStatusChanged(userID, online);  // 发射用户状态变更信号，传递用户ID和在线状态
         }
     }
 }

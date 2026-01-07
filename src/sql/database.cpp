@@ -1,7 +1,6 @@
 #include "database.h"
 #include <QSqlRecord>
 
-
 Database::Database()
 {
 }

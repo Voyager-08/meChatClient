@@ -1,19 +1,20 @@
+#include <QVBoxLayout>                  // 垂直布局管理器，用于垂直排列控件
+#include <QHBoxLayout>                  // 水平布局管理器，用于水平排列控件
+#include <QFormLayout>                  // 表单布局管理器，用于创建标签-输入字段的表单
+#include <QMessageBox>                  // 消息对话框，用于显示提示信息
+#include <QSqlQuery>                    // SQL查询
+#include <QSqlError>                    // SQL错误处理
+#include <QGraphicsEffect>              // 图形效果
+#include <QFileDialog>                  // 选择文件对话框
+#include <QPropertyAnimation>           // 用于动画效果
+#include <QRandomGenerator>             // 用于生成随机数
+#include <QEvent>                       // 用于处理事件
+#include <QTimer>                       // 定时器
+#include <QPainter>                     // 绘图
+#include <QGraphicsDropShadowEffect>    // 添加阴影效果支持
+
 #include "registerwidget.h"
-#include "../sql/database.h"// 包含数据库头文件
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFormLayout>
-#include <QMessageBox>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QGraphicsEffect>
-#include <QFileDialog>
-#include <QPropertyAnimation>// 用于动画效果
-#include <QRandomGenerator>
-#include <QEvent>
-#include <QTimer>
-#include <QPainter>
-#include <QGraphicsDropShadowEffect> // 添加阴影效果支持
+#include "src/sql/database.h"// 包含数据库头文件
 
 RegisterWidget::RegisterWidget(QWidget *parent)
     : QWidget(parent)
@@ -69,7 +70,7 @@ void RegisterWidget::initUI()
 
     // 用户名输入框
     userIDLineEdit = new QLineEdit(container);
-    userIDLineEdit->setPlaceholderText("请输入用户名");
+    userIDLineEdit->setPlaceholderText("请输入用户ID");
     QString lineEditStyle =
         "QLineEdit {"
         "height: 40px;"
@@ -284,12 +285,13 @@ bool RegisterWidget::onRegisterClicked()
     }
     QString email="NULL";
     // 插入新用户
-    query.prepare("INSERT INTO users (user_id, password,username,email,avatarpath) VALUES (?, ?,?,?,?)");
-    query.addBindValue(userID);
-    query.addBindValue(password);
-    query.addBindValue(userID);
-    query.addBindValue(email);
-    query.addBindValue(avatarPath);
+    query.prepare("INSERT INTO users (user_id, user_nick, password, email, avatar_path) "
+                "VALUES (?, ?, ?, ?, ?)");
+    query.addBindValue(userID);      // user_id
+    query.addBindValue(userID);    // user_nick ← 应传入昵称变量，不是 userID！
+    query.addBindValue(password);    // password
+    query.addBindValue(email);       // email
+    query.addBindValue(avatarPath);  // avatar_path
 
     if (!query.exec()) {
         qDebug() << "Error inserting user_id into database: " << query.lastError().text();

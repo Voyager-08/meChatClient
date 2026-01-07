@@ -2,7 +2,10 @@
 #include "contactmodel.h"
 #include <QPixmap>
 #include <QFile>
-#include <QDebug>  // 👈 补充头文件
+#include <QDebug>  
+
+
+
 
 ContactModel::ContactModel(QObject *parent)// 显示构造函数，必须传父对象指针
     : QAbstractListModel(parent)// 调用父类构造函数

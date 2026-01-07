@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QDir>
+#include "contactmodel.h"
 
 ContactDelegate::ContactDelegate(QObject *parent)
     : QStyledItemDelegate(parent)

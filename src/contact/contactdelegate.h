@@ -4,7 +4,6 @@
 #include <QStyledItemDelegate>
 #include <QPixmap>
 #include <QCache>
-#include "contactmodel.h"
 
 class ContactDelegate : public QStyledItemDelegate
 {

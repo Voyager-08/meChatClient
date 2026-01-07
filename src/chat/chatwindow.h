@@ -14,7 +14,7 @@ class ContactModel;
 class ContactDelegate;
 class ContactMessageBubble;
 class NetworkManager;
-
+class ClickableLabel;
 //枚举enum会定义一系列新的类型
 enum class ResizeMode;
 struct Friend;
@@ -69,8 +69,9 @@ private:
     bool isLeftButtonPressed;// 鼠标是否按下左键
     QPoint dragPosition;// 用于存储鼠标拖动位置
     ResizeMode resizeMode = ResizeMode::None;// 窗口拉伸模式
-    int borderWidth = 8; // 增大窗口边框宽度，用于边缘检测，改善用户体验
+    int borderWidth = 5; // 增大窗口边框宽度，用于边缘检测，改善用户体验
     bool isMaximize = false; // 用于跟踪窗口是否最大化
+    QList<QWidget*> buttonWidgets;
     
     //信息数据结构
     currentUserInfo userInfo; // 当前用户信息
@@ -90,6 +91,7 @@ private:
     void connectSignals();// 连接信号槽
     void initialUserInfo(QString userID);// 初始化用户信息
     QString toStringSex(Sex s) ;// 将性别枚举转换为字符串
+    bool isNonDraggableWidget(QWidget* w);
 
     // 窗口状态相关函数
     void showMaximize();//显示最大化窗口
@@ -98,9 +100,10 @@ private:
     void showMoments();//显示朋友圈
     void showSearch();//显示搜索界面
     void sendMessage(); // 发送消息
+    void addContact(); // 添加联系人
     void onContactClicked(const QModelIndex &index); // 点击联系人
-    void addSampleMessages(QString friendNick,QString userNick); // 添加示例消息
-    void displayContactMessages(QString receiverID); // 显示联系人消息
+    void addSampleMessages(); // 添加示例消息
+    void showContactMessages(QString receiverID); // 显示联系人消息
     void onMessageClicked(const QModelIndex &index); // 点击消息
     void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
     void onMessageReceived(const networkData &data); // 处理接收消息

@@ -3,7 +3,6 @@
   <qresource prefix="/">
     <file>images/icon_user.png</file>
     <file>images/icon_password.png</file>
-    <file>images/user.png</file>
     <file>images/icon2.png</file>
     <file>images/icon3.png</file>
     <file>images/icon1.png</file>
@@ -23,6 +22,7 @@
     <file>images/7.png</file>
     <file>images/8.png</file>
     <file>images/6.png</file>
+    <file>images/default_avatar.png</file>
   </qresource>
   <qresource prefix="/">
     <file>images/avatar/1.jpg</file>

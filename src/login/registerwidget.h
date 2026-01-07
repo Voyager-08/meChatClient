@@ -6,7 +6,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QCheckBox>
-#include "../sql/database.h"
 
 class RegisterWidget : public QWidget
 {
@@ -55,7 +54,7 @@ public:
     // 数据
     QString userID; // 用户ID
     QString password;// 密码
-    QString avatarPath=":/images/avatar/user.jpg"; // 头像路径
+    QString avatarPath=":/images/default_avatar.png"; // 头像路径
 };
 
 #endif // REGISTERDIALOG_H

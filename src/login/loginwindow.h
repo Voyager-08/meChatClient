@@ -7,8 +7,8 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QWidget>
-#include <QStackedWidget>// 用于切换登录和注册界面
-#include <QPropertyAnimation>
+#include <QStackedWidget>       // 用于切换登录和注册界面
+#include <QPropertyAnimation>   // 用于切换登录和注册界面
 
 
 QT_BEGIN_NAMESPACE
@@ -29,7 +29,6 @@ class LoginWindow : public QDialog
 
 public:
     explicit LoginWindow(QDialog *parent = nullptr);
-    ~LoginWindow();
     QString getUserId() const{ return savedUserID; };
     
 //类成员变量
@@ -41,15 +40,13 @@ private:
     QStackedWidget*stackedWidget;// 用于切换登录和注册界面
     QWidget*loginWidget; // 主登录窗口组件
     RegisterWidget *registerWidget; // 主注册窗口组件
-    QLabel* userLabel; // 添加欢迎标签的声明
+    QLabel* userAvatar; // 用户头像标签
     QLineEdit* userIDLineEdit; // 用户名输入框
     QLineEdit* passwordLineEdit; // 密码输入框
     QCheckBox* showPasswordButton; // 显示密码复选框
     QPushButton* forgetPasswordButton; // 忘记密码按钮
     QPushButton* loginButton; // 登录按钮
     QPushButton* registerButton; // 注册按钮
-    QLabel* icon_user; // 用户图标标签
-    QLabel* icon_password; // 密码图标标签
     bool resetLineEdit=0;// 是否重置输入框
     QString originalStyle;// 保存原始样式
     QString savedUserID;// 保存用户ID
@@ -57,13 +54,14 @@ private:
     QString savedUserNick; // 保存用户昵称
 
     // 动画相关
-    QPropertyAnimation *m_flipAnimation;
-    int m_currentWidgetIndex;
+    QPropertyAnimation *m_flipAnimation;// 窗口翻转动画
+    int m_currentWidgetIndex;// 当前显示的组件索引
     
 //槽函数
 private slots:
     void resetLineEditStyle(QLineEdit* lineEdit);// 重置输入框样式
     bool checkInputFields();// 检查输入框
+    void showAvatar();// 显示头像
     void togglePasswordVisibility(); // 切换密码可见性
     void onForgetPassword(); // 忘记密码处理
     bool login();//登录功能
