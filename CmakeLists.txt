@@ -21,7 +21,9 @@ if(WIN32)
     set(MYSQL_ROOT_DIR "D:/QT/QtFiles/MySQL" CACHE PATH "MySQL root")
     set(MYSQL_INCLUDE_DIR "${MYSQL_ROOT_DIR}/include")
     set(LIBMYSQL_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libmysql.dll")
-
+    set(LIBCRYPTO_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libcrypto-3-x64.dll")
+    set(LIBSSL_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libssl-3-x64.dll")
+    
     if(NOT EXISTS "${MYSQL_INCLUDE_DIR}/mysql.h")
         message(FATAL_ERROR "mysql.h not found!")
     endif()
@@ -29,6 +31,7 @@ if(WIN32)
         message(FATAL_ERROR "libmysql.dll not found!")
     endif()
 endif()
+
 
 # === 可执行文件 ===
 add_executable(weChat
@@ -52,10 +55,14 @@ add_executable(weChat
     src/custom/meplaintextedit.h
     src/custom/clickablelabel.cpp
     src/custom/clickablelabel.h
-    src/contact/contactmodel.cpp
-    src/contact/contactmodel.h
-    src/contact/contactdelegate.cpp
-    src/contact/contactdelegate.h
+    src/modelView/messagemodel.cpp
+    src/modelView/messagemodel.h
+    src/modelView/contactmodel.cpp
+    src/modelView/contactmodel.h
+    src/modelView/contactdelegate.cpp
+    src/modelView/contactdelegate.h
+    src/modelView/messagedelegate.cpp
+    src/modelView/messagedelegate.h
     resources.qrc
 )
 
@@ -79,9 +86,19 @@ endforeach()
 
 # === 编译选项 ===
 set_target_properties(weChat PROPERTIES
-    COMPILE_DEFINITIONS_RELEASE "QT_NO_DEBUG_OUTPUT;QT_NO_INFO_OUTPUT;QT_NO_WARNING_OUTPUT"
+    COMPILE_DEFINITIONS_RELEASE "QT_NO_DEBUG_OUTPUT;QT_NO_INFO_OUTPUT;QT_NO_WARNING_OUTPUT;QT_NO_QDEBUG"
 )
 target_compile_definitions(weChat PRIVATE QT_DEPRECATED_WARNINGS)
+
+# 如果使用MinGW编译器且为Release模式
+if(MINGW AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    # 设置Windows子系统，不显示控制台窗口
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mwindows")
+elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    # 如果使用MSVC编译器且为Release模式
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+endif()
+
 
 # === Windows: 自动复制运行时依赖 ===
 if(WIN32)
@@ -121,9 +138,24 @@ if(WIN32)
                 "$<TARGET_FILE_DIR:weChat>/platforms/qwindows.dll"
             COMMENT "Copy qwindows.dll"
         )
+    # 5. 复制 libssl-3-x64.dll 和 libcrypto-3-x64.dll
+    add_custom_command(TARGET weChat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${LIBSSL_DLL_PATH}"
+        "$<TARGET_FILE_DIR:weChat>/libssl-3-x64.dll"
+    COMMENT "Copy libssl-3-x64.dll to output dir"
+    )
+
+    add_custom_command(TARGET weChat POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${LIBCRYPTO_DLL_PATH}"
+            "$<TARGET_FILE_DIR:weChat>/libcrypto-3-x64.dll"
+        COMMENT "Copy libcrypto-3-x64.dll to output dir"
+    )
+
     endif()
 
-    # 5. 复制 MinGW 运行时（可选）
+    # 6. 复制 MinGW 运行时（可选）
     if(CMAKE_COMPILER_IS_GNUCXX OR MINGW)
         foreach(rt_dll libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll)
             set(src "${QT_ROOT}/bin/${rt_dll}")
@@ -137,6 +169,15 @@ if(WIN32)
             endif()
         endforeach()
     endif()
+endif()
+
+# 在构建时创建 images/avatar 目录
+if(WIN32)
+    add_custom_command(TARGET weChat POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:weChat>/images/avatar"
+        COMMENT "Creating images/avatar directory for user avatars"
+    )
 endif()
 
 # ============ 新增：安全输出当前构建类型（无颜色，兼容所有平台） ============

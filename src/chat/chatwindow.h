@@ -10,11 +10,14 @@
 #include <QDate>
 
 namespace Ui {class ChatWindow;}
+class MessageModel;
 class ContactModel;
 class ContactDelegate;
+class MessageDelegate;
 class ContactMessageBubble;
 class NetworkManager;
 class ClickableLabel;
+class QLabel;
 //枚举enum会定义一系列新的类型
 enum class ResizeMode;
 struct Friend;
@@ -77,8 +80,9 @@ private:
     currentUserInfo userInfo; // 当前用户信息
     QString receiverID; // 当前消息接收者ID
     ContactModel *contactModel;// 联系人模型
-    ContactModel *messageModel;// 消息模型
+    MessageModel *messageModel;// 消息模型
     ContactDelegate *contactDelegate; // 联系人委托
+    MessageDelegate *messageDelegate; // 消息委托
     QHash<QString, QList<Message>> messageDataMap; // 存储消息数据映射
     QHash<QString, Friend> contactList; // 存储联系人
     QHash<QString, bool> contactSelected; // 存储联系人是否被选中
@@ -87,27 +91,37 @@ private:
     NetworkManager *m_networkManager; // 网络管理器
 
 private:
-    void initUI();// 初始化UI
-    void connectSignals();// 连接信号槽
+    void initialUI();// 初始化UI
+    void initialStackWideget();// 初始化堆栈窗口
+    void initialModelView();// 初始化模型视图
     void initialUserInfo(QString userID);// 初始化用户信息
     QString toStringSex(Sex s) ;// 将性别枚举转换为字符串
     bool isNonDraggableWidget(QWidget* w);
+    void connectSignals();// 连接信号槽
 
     // 窗口状态相关函数
     void showMaximize();//显示最大化窗口
+    void showMessage();//显示消息界面
     void showContact();//显示联系人列表
     void showCollect();//显示收藏界面
     void showMoments();//显示朋友圈
     void showSearch();//显示搜索界面
     void sendMessage(); // 发送消息
-    void addContact(); // 添加联系人
-    void onContactClicked(const QModelIndex &index); // 点击联系人
+    void addFriend(); // 添加联系人
+    void onSentBtnClicked();//发送按钮点击
+    void onContactClicked(const QModelIndex &index); // 单击联系人
+    void onContactDoubleClicked(const QModelIndex &index); // 双击联系人
+    void onCheckContact(const QModelIndex &index); // 点击发消息按钮
     void addSampleMessages(); // 添加示例消息
+    void addSampleMessages(QString friendID);//添加示例消息
     void showContactMessages(QString receiverID); // 显示联系人消息
     void onMessageClicked(const QModelIndex &index); // 点击消息
     void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
     void onMessageReceived(const networkData &data); // 处理接收消息
     void animatePageTransition(QWidget *widget); // 页面切换动画
+    void loadContactsFromDatabase(); // 从数据库加载联系人
+    void refreshContacts(); // 刷新联系人
+    void paintRdiusPixmap(QLabel*label,const QString paintPath, int xRdius,int yRdius);// 绘制图片
 
     // 网络相关函数
     void linkServer(); // 连接服务器

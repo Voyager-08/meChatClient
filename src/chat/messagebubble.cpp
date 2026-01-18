@@ -33,17 +33,17 @@ void MessageBubble::paintEvent(QPaintEvent*) {
     painter.setRenderHint(QPainter::Antialiasing);
     
     // 设置透明度
-    QColor bgColor = (m_role == Self) ? QColor(66, 185, 131) : QColor(250, 250, 255);
+    QColor bgColor = (m_role == Self) ? QColor(58, 217, 47) : QColor(250, 250, 255);
     bgColor.setAlphaF(m_opacity);  // 应用透明度
     painter.setBrush(bgColor);
     painter.setPen(Qt::NoPen);
+
     // 气泡圆角矩形
     int margin = (m_role == Self) ? width() - 320 : 20;
     QRect bubbleRect(margin, 5, 300, height() - 10);//  气泡矩形位置和大小
     painter.drawRoundedRect(bubbleRect, 10, 10);
-
     // 文字颜色
-    QColor textColor = (m_role == Self) ? Qt::white : Qt::black;
+    QColor textColor = QColor(25, 25, 25);
     textColor.setAlphaF(m_opacity);  // 应用透明度到文字
     painter.setPen(textColor);
     

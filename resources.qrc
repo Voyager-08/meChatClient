@@ -4,7 +4,6 @@
     <file>images/icon_user.png</file>
     <file>images/icon_password.png</file>
     <file>images/icon2.png</file>
-    <file>images/icon3.png</file>
     <file>images/icon1.png</file>
     <file>images/icon4.png</file>
     <file>images/icon5.png</file>
@@ -15,17 +14,11 @@
     <file>images/icon10.png</file>
     <file>images/2.png</file>
     <file>images/1.png</file>
-    <file>images/3.png</file>
-    <file>images/placeholder.png</file>
-    <file>images/9.png</file>
     <file>images/10.png</file>
     <file>images/7.png</file>
     <file>images/8.png</file>
     <file>images/6.png</file>
     <file>images/default_avatar.png</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>images/avatar/1.jpg</file>
-    <file>images/avatar/user.jpg</file>
+    <file>images/12.png</file>
   </qresource>
 </RCC>

@@ -12,9 +12,11 @@
 #include <QTimer>                       // 定时器
 #include <QPainter>                     // 绘图
 #include <QGraphicsDropShadowEffect>    // 添加阴影效果支持
+#include <QRegularExpression>           // 正则表达式
 
 #include "registerwidget.h"
 #include "src/sql/database.h"// 包含数据库头文件
+#include "src/custom/clickablelabel.h"
 
 RegisterWidget::RegisterWidget(QWidget *parent)
     : QWidget(parent)
@@ -42,7 +44,7 @@ void RegisterWidget::initUI()
 
     // 创建主容器
     QFrame *container = new QFrame(this);
-    container->setGeometry(150, 40, 410, 370); // 居中显示
+    container->setGeometry(150, 40, 410, 420); // 调整高度以容纳新的输入框
 
     // 添加容器阴影效果
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
@@ -61,14 +63,35 @@ void RegisterWidget::initUI()
     avatarButton->setIcon(icon);
     avatarButton->setIconSize(avatarButton->size());
 
+    // 创建头像提示标签
+    avatarTipLabel = new ClickableLabel(container);
+    avatarTipLabel->setObjectName("avatarTipLabel"); // 设置对象名以便后续引用
+    avatarTipLabel->setText("点击选择头像");
+    avatarTipLabel->setGeometry(150, 0, 80, 80); // 与头像按钮大小和位置一致
+    avatarTipLabel->setAlignment(Qt::AlignCenter); // 文字居中
+    
+    // 设置样式表：半透明黑色背景，白色文字，圆角
+    QString tipStyle = "QLabel#avatarTipLabel {"
+                       "background-color: rgba(0, 0, 0, 100);"
+                       "color: white;"
+                       "font-size: 12px;"
+                       "font-weight: bold;"
+                       "font-family: 'Kaiti';"
+                       "}";
+    avatarTipLabel->setStyleSheet(tipStyle);
+    
+    // 确保标签在最上层
+    avatarTipLabel->raise();
+
+
     // 用户图标
     QLabel *iconLabel = new QLabel(container);
     QPixmap userPixmap(":/images/icon_user.png");
     userPixmap = userPixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     iconLabel->setPixmap(userPixmap);
-    iconLabel->setGeometry(40, 105, 24, 24);
+    iconLabel->setGeometry(40, 104, 24, 24);
 
-    // 用户名输入框
+    // 用户ID输入框
     userIDLineEdit = new QLineEdit(container);
     userIDLineEdit->setPlaceholderText("请输入用户ID");
     QString lineEditStyle =
@@ -78,8 +101,8 @@ void RegisterWidget::initUI()
         "border: 1px solid rgba(255, 255, 255, 40%);"
         "border-radius: 20px;"
         "background-color: rgba(255, 255, 255, 10%);"
-        "color: white;"
-        "font-family: 'Microsoft YaHei', 'SimHei';"
+        "color: #000000;"
+        "font-family: 'Kaiti';"
         "font-size: 14px;"
         "}"
         "QLineEdit:focus {"
@@ -88,39 +111,52 @@ void RegisterWidget::initUI()
         "}";
     originalStyleSheet=lineEditStyle;
     userIDLineEdit->setStyleSheet(lineEditStyle);
-    userIDLineEdit->setGeometry(30, 100, 340, 40);
+    userIDLineEdit->setGeometry(30, 97, 340, 40);
+
+    // 昵称图标
+    QLabel *nickIconLabel = new QLabel(container);
+    QPixmap nickPixmap(":/images/icon_user.png"); // 使用相同的用户图标
+    nickPixmap = nickPixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    nickIconLabel->setPixmap(nickPixmap);
+    nickIconLabel->setGeometry(40, 157, 24, 24);
+
+    // 用户昵称输入框
+    userNickLineEdit = new QLineEdit(container);
+    userNickLineEdit->setPlaceholderText("请输入用户昵称");
+    userNickLineEdit->setStyleSheet(lineEditStyle);
+    userNickLineEdit->setGeometry(30, 150, 340, 40);
 
     // 密码图标
     QLabel *passwordIconLabel = new QLabel(container);
     QPixmap passwordPixmap(":/images/icon_password.png");
     passwordPixmap = passwordPixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     passwordIconLabel->setPixmap(passwordPixmap);
-    passwordIconLabel->setGeometry(40, 160, 24, 24);
+    passwordIconLabel->setGeometry(40, 212, 24, 24);
 
     // 密码输入框
     passwordLineEdit = new QLineEdit(container);
     passwordLineEdit->setPlaceholderText("请输入密码");
     passwordLineEdit->setEchoMode(QLineEdit::Password);
     passwordLineEdit->setStyleSheet(lineEditStyle);
-    passwordLineEdit->setGeometry(30, 155, 340, 40);
+    passwordLineEdit->setGeometry(30, 205, 340, 40);
 
     // 确认密码图标
     QLabel *confirmPasswordIconLabel = new QLabel(container);
     QPixmap confirmPasswordPixmap(":/images/icon_password.png");
     confirmPasswordPixmap = confirmPasswordPixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     confirmPasswordIconLabel->setPixmap(confirmPasswordPixmap);
-    confirmPasswordIconLabel->setGeometry(40, 215, 24, 24);
+    confirmPasswordIconLabel->setGeometry(40, 267, 24, 24);
 
     // 确认密码输入框
     confirmPasswordLineEdit = new QLineEdit(container);
     confirmPasswordLineEdit->setPlaceholderText("请确认密码");
     confirmPasswordLineEdit->setEchoMode(QLineEdit::Password);
     confirmPasswordLineEdit->setStyleSheet(lineEditStyle);
-    confirmPasswordLineEdit->setGeometry(30, 210, 340, 40);
+    confirmPasswordLineEdit->setGeometry(30, 260, 340, 40);
 
     // 显示密码复选框
     showPasswordCheckBox = new QCheckBox("显示密码", container);
-    showPasswordCheckBox->setGeometry(50, 255, 100, 20);
+    showPasswordCheckBox->setGeometry(50, 305, 100, 20);
 
     // 注册按钮
     registerButton = new QPushButton("注册", container);
@@ -130,7 +166,7 @@ void RegisterWidget::initUI()
         "color: white;"
         "padding: 10px 28px;"
         "border-radius: 20px;"
-        "font-family: 'Microsoft YaHei', 'SimHei';"
+        "font-family: 'Kaiti';"
         "font-size: 16px;"
         "font-weight: bold;"
         "border: none;"
@@ -144,7 +180,7 @@ void RegisterWidget::initUI()
         "padding-bottom: 8px;"
         "}";
     registerButton->setStyleSheet(registerButtonStyle);
-    registerButton->setGeometry(30, 309, 160, 40);
+    registerButton->setGeometry(30, 345, 160, 40);
     
     // 返回登录按钮
     backButton = new QPushButton("返回", container);
@@ -154,7 +190,7 @@ void RegisterWidget::initUI()
         "color: rgba(250, 250, 250, 1);"
         "padding: 10px 28px;"
         "border-radius: 20px;"
-        "font-family: 'Microsoft YaHei', 'SimHei';"
+        "font-family: 'Kaiti';"
         "font-size: 16px;"
         "border: 2px solid rgba(255, 255, 255, 0.5);"
         "}"
@@ -170,7 +206,7 @@ void RegisterWidget::initUI()
         "padding-bottom: 8px;"
         "}";
     backButton->setStyleSheet(backButtonStyle);
-    backButton->setGeometry(210, 309, 160, 40);
+    backButton->setGeometry(210, 345, 160, 40);
     QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect;
     shadow->setBlurRadius(20);//模糊半径
     shadow->setColor(QColor(0, 0, 0, 80));//颜色
@@ -187,14 +223,16 @@ void RegisterWidget::initUI()
     "font-weight: bold;"
      "}";
     errorLabel->setStyleSheet(errorLabelStyle);
-    errorLabel->setGeometry(30, 285, 340, 20);
+    errorLabel->setGeometry(30, 335, 340, 20);
     errorLabel->hide();
+
+    
 }
 
 void RegisterWidget::setBackground()
 {
     // 加载并缩放背景图以适应窗口大小
-    QPixmap bg("D:/cxdownload/夸克文件下载/8.png");
+    QPixmap bg(":images/8.png");
     if (bg.isNull()) {
         qWarning() << "Failed to load background image!";
         return;
@@ -218,6 +256,7 @@ void RegisterWidget::signalConnection()
         confirmPasswordLineEdit->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
     });
     connect(passwordLineEdit, &QLineEdit::textChanged, this, &RegisterWidget::onPasswordChanged);
+    connect(avatarTipLabel, &ClickableLabel::clicked, this, &RegisterWidget::onSelectAvatar);
     connect(avatarButton, &QPushButton::clicked, this, &RegisterWidget::onSelectAvatar);
     // 为可点击控件添加悬停事件处理
     registerButton->installEventFilter(this);
@@ -258,8 +297,10 @@ bool RegisterWidget::onRegisterClicked()
     }
 
     QString userID = userIDLineEdit->text();
+    QString userNick = userNickLineEdit->text(); // 获取用户昵称
     QString password = passwordLineEdit->text();
     qDebug()<<"      ID:"<<userID;
+    qDebug()<<" Nickname:"<<userNick;
     qDebug()<<"password:"<<password;
     Database registerDb;
     if (!registerDb.connect("register")) {
@@ -277,7 +318,7 @@ bool RegisterWidget::onRegisterClicked()
     }
 
     if (query.next()) {
-        showError("用户名已存在，请选择其他用户名");
+        showError("用户ID已存在，请选择其他用户ID");
         // 添加输入框红色闪烁效果
         highlightError(userIDLineEdit);
         userIDLineEdit->setFocus();
@@ -288,7 +329,7 @@ bool RegisterWidget::onRegisterClicked()
     query.prepare("INSERT INTO users (user_id, user_nick, password, email, avatar_path) "
                 "VALUES (?, ?, ?, ?, ?)");
     query.addBindValue(userID);      // user_id
-    query.addBindValue(userID);    // user_nick ← 应传入昵称变量，不是 userID！
+    query.addBindValue(userNick);    // user_nick ← 现在使用真正的昵称变量
     query.addBindValue(password);    // password
     query.addBindValue(email);       // email
     query.addBindValue(avatarPath);  // avatar_path
@@ -299,9 +340,10 @@ bool RegisterWidget::onRegisterClicked()
         return false;
     }
 
-    // 保存用户名以便返回给调用者
+    // 保存用户ID以便返回给调用者
     this->userID = userID;
     userIDLineEdit->clear();
+    userNickLineEdit->clear(); // 清空昵称输入框
     passwordLineEdit->clear();
     confirmPasswordLineEdit->clear();
     showPasswordCheckBox->setChecked(false);
@@ -335,7 +377,7 @@ void RegisterWidget::onSelectAvatar()
         if (!pixmap.isNull())
         {
             // 将图片缩放为80x80大小，保持宽高比，并使用平滑变换
-            QPixmap scaledPixmap = pixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            QPixmap scaledPixmap = pixmap.scaled(80, 80, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             // 设置按钮的图标为缩放后的图片
             avatarButton->setIcon(QIcon(scaledPixmap));
             // 设置按钮图标的显示大小为80x80
@@ -343,6 +385,7 @@ void RegisterWidget::onSelectAvatar()
         }
     }
     if(fileName.isEmpty())return;
+    avatarTipLabel->hide();//隐藏提示
     avatarPath=fileName;
 }
 
@@ -351,16 +394,33 @@ bool RegisterWidget::validateInput()// 验证输入
     clearErrors();// 先清除错误标签以及信息
 
     QString userID = userIDLineEdit->text().trimmed();// 获取用户ID,去除空格
+    QString userNick = userNickLineEdit->text().trimmed(); // 获取用户昵称，去除空格
     QString password = passwordLineEdit->text();
     QString confirmPassword = confirmPasswordLineEdit->text();
 
     if (userID.isEmpty()) {
-        showError("用户名不能为空!");
+        showError("用户ID不能为空!");
         userIDLineEdit->setFocus();// 设置焦点
         highlightError(userIDLineEdit);
         return false;
     }
 
+    if (userNick.isEmpty()) {
+        showError("用户昵称不能为空!");
+        userNickLineEdit->setFocus();// 设置焦点
+        highlightError(userNickLineEdit);
+        return false;
+    }
+
+    QRegularExpression re("[^0-9]"); // 用户ID只能是数字
+    //用户ID只能是数字
+    if (userID.contains(re)) {
+        showError("用户ID只能是数字!");
+        userIDLineEdit->setFocus();
+        highlightError(userIDLineEdit);
+        return false;
+    }
+    
     if (password.isEmpty()) {
         showError("密码不能为空!");
         passwordLineEdit->setFocus();
@@ -420,7 +480,7 @@ void RegisterWidget::highlightError(QLineEdit* lineEdit) {
     "border-radius: 20px;"
     "background-color: rgba(255, 255, 255, 10%);"
     "color: white;"
-    "font-family: 'Microsoft YaHei', 'SimHei';"
+    "font-family: 'Kaiti';"
     "font-size: 14px;"
     "}"
     "QLineEdit:focus {"

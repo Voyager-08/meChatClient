@@ -1,5 +1,7 @@
 #include <QPixmap>
 #include <QPalette>         // 包含调色板头文件
+#include <QPainter>         // 包含绘图头文件
+#include <QPainterPath>    // 包含路径头文件
 #include <QGraphicsDropShadowEffect>     // 包含阴影效果头文件
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -416,30 +418,43 @@ void LoginWindow::showAvatar()
     }
 
     QSqlQuery query(db.database());
-    // 建议：用反引号包裹字段名（防止关键字冲突）
     query.prepare("SELECT `avatar_path` FROM `users` WHERE `user_id` = :userID");
     query.bindValue(":userID", userIDLineEdit->text());
 
     if (!query.exec()) {
         qDebug() << "SQL 查询失败:" << query.lastError().text();
-        qDebug() << "执行的 SQL:" << query.lastQuery(); // 打印实际 SQL
         return;
     }
 
-    if (query.next()) 
-    {
-        QString avatarPath = query.value("avatar_path").toString(); // 推荐用字段名而非索引
-        if (QFile::exists(avatarPath)) {// 检查文件是否存在
-            userAvatar->setPixmap(QPixmap(avatarPath));
-        } 
-        else {
-            qDebug() << "头像文件不存在:" << avatarPath;
-            // 可设置默认头像
-            userAvatar->setPixmap(QPixmap(":images/default_avatar.png"));
+    if (query.next()) {
+        QString avatarPath = query.value("avatar_path").toString();
+        QPixmap pixmap;
+        
+        if (QFile::exists(avatarPath)) {
+            pixmap = QPixmap(avatarPath);
+        } else {
+            pixmap = QPixmap(":/images/default_avatar.png");
         }
-    } 
-    else qDebug() << "未找到用户 ID:" << userIDLineEdit->text();
 
+        // 创建圆角头像
+        QPixmap roundedAvatar(80, 80);
+        roundedAvatar.fill(Qt::transparent);
+        
+        QPainter painter(&roundedAvatar);
+        painter.setRenderHint(QPainter::Antialiasing);
+        
+        // 创建圆形路径
+        QPainterPath path;
+
+        
+        path.addRoundedRect(0, 0, 80, 80,5,5);  // 完整圆形
+        painter.setClipPath(path);// 设置剪切路径
+
+        // 绘制缩放后的头像
+        painter.drawPixmap(0, 0, pixmap.scaled(80, 80, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        
+        userAvatar->setPixmap(roundedAvatar);
+    }
 }
 
 void LoginWindow::switchToRegister()//切换到注册界面

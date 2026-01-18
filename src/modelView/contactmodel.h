@@ -9,17 +9,16 @@
 struct Contact ;
 enum class ContactRoles ;
 
-struct Contact {//昵称、头像路径、签名
+struct Model_Contact {//昵称、头像路径、签名
     QString name;
-    QString avatarPath;//头像路径
-    QString message;//个性签名
-    QString id; // 联系人ID
+    QString avatarPath;
+    QString id;
 };
+
 enum class ContactRoles {
     NameRole = Qt::UserRole + 1,      // 名字
     AvatarPathRole = Qt::UserRole + 2, // 头像路径（字符串）
-    MessageRole = Qt::UserRole + 3,     // 签名
-    IDRole = Qt::UserRole + 4           // ID
+    IDRole = Qt::UserRole + 3   // 联系人ID
 };
 
 class ContactModel : public QAbstractListModel
@@ -32,11 +31,12 @@ public:
     QHash<int, QByteArray> roleNames() const override;//返回角色名称映射
 
 public:
-    void addContact(const Contact &contact);//添加联系人
-    void addContact(const QString &name, const QString &avatarPath, const QString &message,const QString &ID);//添加联系人重载
+    void addContact(const Model_Contact &contact);//添加联系人
+    void addContact(const QString &name, const QString &avatarPath,const QString &id);//添加联系人重载
+    void clearContacts();//清空联系人列表
 
 private:
-    QList<Contact> m_contacts;//联系人列表
+    QList<Model_Contact> m_contacts;//联系人列表
 };
 
 #endif // CONTACTMODEL_H

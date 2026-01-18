@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 
+class ClickableLabel;
 class RegisterWidget : public QWidget
 {
     Q_OBJECT
@@ -41,7 +42,9 @@ public:
     QPushButton *avatarButton; // 使用 QPushButton 以支持点击事件，作为标题显示
     QLabel *backgroundLabel; // 添加背景标签，用于设置背景图片
     QLabel *userIDLabel; // 用户名标签
+    ClickableLabel *avatarTipLabel;// 头像提示标签
     QLineEdit *userIDLineEdit; // 用户名输入框
+    QLineEdit *userNickLineEdit; // 用户昵称输入框
     QLabel *passwordLabel; // 密码标签
     QLineEdit *passwordLineEdit; // 密码输入框
     QLabel *confirmPasswordLabel; // 确认密码标签
@@ -54,7 +57,8 @@ public:
     // 数据
     QString userID; // 用户ID
     QString password;// 密码
+    QString userNick; // 用户昵称
     QString avatarPath=":/images/default_avatar.png"; // 头像路径
 };
 
-#endif // REGISTERDIALOG_H
+#endif // REGISTERWIDGET_H
