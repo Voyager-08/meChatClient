@@ -28,9 +28,9 @@ bool Database::connect(QString connectDbName)
     // 为每个连接创建唯一的连接名称
     db = QSqlDatabase::addDatabase("QMYSQL", connectDbName);// 使用 MySQL 数据库驱动
     db.setDatabaseName("mechat");// 数据库名称
-    db.setHostName("47.110.91.35");// 数据库服务器地址
-    db.setUserName("mechat_user");// 数据库用户名
-    db.setPassword("mechatuser");// 数据库密码
+    db.setHostName("8.129.134.106");// 数据库服务器地址
+    db.setUserName("root_mechat");// 数据库用户名
+    db.setPassword("rootmechat");// 数据库密码
     db.setPort(3306);
     
     if (!db.open()) {

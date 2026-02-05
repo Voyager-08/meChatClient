@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
-project(weChat VERSION 0.1 LANGUAGES CXX)
+project(meChatClient VERSION 0.1 LANGUAGES CXX)
+
+# 设置默认构建类型为Release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel" FORCE)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,9 +37,8 @@ if(WIN32)
     endif()
 endif()
 
-
 # === 可执行文件 ===
-add_executable(weChat
+add_executable(meChatClient
     src/main.cpp
     src/login/loginwindow.cpp
     src/login/loginwindow.h
@@ -67,28 +71,33 @@ add_executable(weChat
 )
 
 # === 包含目录 ===
-target_include_directories(weChat PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(meChatClient PRIVATE ${CMAKE_SOURCE_DIR})
 if(WIN32)
-    target_include_directories(weChat PRIVATE ${MYSQL_INCLUDE_DIR})
+    target_include_directories(meChatClient PRIVATE ${MYSQL_INCLUDE_DIR})
 endif()
 
 # === 链接库 ===
-target_link_libraries(weChat PRIVATE Qt6::Core Qt6::Widgets Qt6::Sql Qt6::Network)
+target_link_libraries(meChatClient PRIVATE Qt6::Core Qt6::Widgets Qt6::Sql Qt6::Network)
 
 # === 输出目录：统一放到 <build-dir>/bin 下 ===
 # 支持所有配置（Debug/Release/RelWithDebInfo...）
 foreach(CONFIG_TYPE DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
     string(TOUPPER ${CONFIG_TYPE} UPPER_CONFIG)
-    set_target_properties(weChat PROPERTIES
+    set_target_properties(meChatClient PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_${UPPER_CONFIG} ${CMAKE_BINARY_DIR}/bin
     )
 endforeach()
 
 # === 编译选项 ===
-set_target_properties(weChat PROPERTIES
+set_target_properties(meChatClient PROPERTIES
     COMPILE_DEFINITIONS_RELEASE "QT_NO_DEBUG_OUTPUT;QT_NO_INFO_OUTPUT;QT_NO_WARNING_OUTPUT;QT_NO_QDEBUG"
 )
-target_compile_definitions(weChat PRIVATE QT_DEPRECATED_WARNINGS)
+target_compile_definitions(meChatClient PRIVATE QT_DEPRECATED_WARNINGS)
+
+# 添加MSVC编译选项以支持C++17和解决PDB文件访问错误
+if(MSVC)
+    target_compile_options(meChatClient PRIVATE /Zc:__cplusplus /permissive- /FS)
+endif()
 
 # 如果使用MinGW编译器且为Release模式
 if(MINGW AND CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -103,53 +112,59 @@ endif()
 # === Windows: 自动复制运行时依赖 ===
 if(WIN32)
     # 1. 复制 libmysql.dll 到 bin/
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${LIBMYSQL_DLL_PATH}"
-            "$<TARGET_FILE_DIR:weChat>/libmysql.dll"
+            "$<TARGET_FILE_DIR:meChatClient>/libmysql.dll"
         COMMENT "Copy libmysql.dll to output dir"
     )
 
     # 2. 创建 sqldrivers 目录
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:weChat>/sqldrivers"
+            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers"
     )
 
     # 3. 根据实际构建配置（Debug/Release）复制对应的驱动
     set(QT_PLUGIN_DIR "${QT_ROOT}/plugins/sqldrivers")
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<$<CONFIG:Debug>:${QT_PLUGIN_DIR}/qsqlmysqld.dll>$<$<NOT:$<CONFIG:Debug>>:${QT_PLUGIN_DIR}/qsqlmysql.dll>"
-            "$<TARGET_FILE_DIR:weChat>/sqldrivers/$<$<CONFIG:Debug>:qsqlmysqld.dll>$<$<NOT:$<CONFIG:Debug>>:qsqlmysql.dll>"
-        COMMENT "Copy Qt MySQL driver for $<CONFIG> config"
+            "${QT_PLUGIN_DIR}/qsqlmysql.dll"
+            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlmysql.dll"
+        COMMENT "Copy Qt MySQL driver"
+    )
+    add_custom_command(TARGET meChatClient POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT_PLUGIN_DIR}/qsqlmysqld.dll"
+            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlmysqld.dll"
+        COMMENT "Copy Qt MySQL driver (Debug)"
     )
 
     # 4. 复制平台插件
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:weChat>/platforms"
+            "$<TARGET_FILE_DIR:meChatClient>/platforms"
     )
     set(QWINDOWS_DLL "${QT_ROOT}/plugins/platforms/qwindows.dll")
     if(EXISTS "${QWINDOWS_DLL}")
-        add_custom_command(TARGET weChat POST_BUILD
+        add_custom_command(TARGET meChatClient POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${QWINDOWS_DLL}"
-                "$<TARGET_FILE_DIR:weChat>/platforms/qwindows.dll"
+                "$<TARGET_FILE_DIR:meChatClient>/platforms/qwindows.dll"
             COMMENT "Copy qwindows.dll"
         )
     # 5. 复制 libssl-3-x64.dll 和 libcrypto-3-x64.dll
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${LIBSSL_DLL_PATH}"
-        "$<TARGET_FILE_DIR:weChat>/libssl-3-x64.dll"
+        "$<TARGET_FILE_DIR:meChatClient>/libssl-3-x64.dll"
     COMMENT "Copy libssl-3-x64.dll to output dir"
     )
 
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${LIBCRYPTO_DLL_PATH}"
-            "$<TARGET_FILE_DIR:weChat>/libcrypto-3-x64.dll"
+            "$<TARGET_FILE_DIR:meChatClient>/libcrypto-3-x64.dll"
         COMMENT "Copy libcrypto-3-x64.dll to output dir"
     )
 
@@ -160,10 +175,10 @@ if(WIN32)
         foreach(rt_dll libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll)
             set(src "${QT_ROOT}/bin/${rt_dll}")
             if(EXISTS "${src}")
-                add_custom_command(TARGET weChat POST_BUILD
+                add_custom_command(TARGET meChatClient POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         "${src}"
-                        "$<TARGET_FILE_DIR:weChat>/${rt_dll}"
+                        "$<TARGET_FILE_DIR:meChatClient>/${rt_dll}"
                     COMMENT "Copy ${rt_dll}"
                 )
             endif()
@@ -173,9 +188,9 @@ endif()
 
 # 在构建时创建 images/avatar 目录
 if(WIN32)
-    add_custom_command(TARGET weChat POST_BUILD
+    add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:weChat>/images/avatar"
+            "$<TARGET_FILE_DIR:meChatClient>/images/avatar"
         COMMENT "Creating images/avatar directory for user avatars"
     )
 endif()
@@ -186,7 +201,7 @@ if(CMAKE_BUILD_TYPE)
     message("========================================")
     message("Build Configuration: ${CMAKE_BUILD_TYPE}")
     message("Output Directory   : ${CMAKE_BINARY_DIR}/bin")
-    message("Executable Path    : ${CMAKE_BINARY_DIR}/bin/weChat${CMAKE_EXECUTABLE_SUFFIX}")
+    message("Executable Path    : ${CMAKE_BINARY_DIR}/bin/meChatClient${CMAKE_EXECUTABLE_SUFFIX}")
     message("========================================")
     message("")
 else()

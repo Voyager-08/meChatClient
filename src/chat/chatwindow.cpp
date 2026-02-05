@@ -1306,7 +1306,7 @@ void ChatWindow::linkServer()// 连接服务器
             this, &ChatWindow::onUserStatusChanged);
 
     // 连接到服务器 
-    m_networkManager->connectToServer("47.110.91.35", 6452);
+    m_networkManager->connectToServer("8.129.134.106", 6452);
 
 }
 
