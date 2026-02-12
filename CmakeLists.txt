@@ -153,12 +153,14 @@ if(WIN32)
                 "$<TARGET_FILE_DIR:meChatClient>/platforms/qwindows.dll"
             COMMENT "Copy qwindows.dll"
         )
+    endif()
+    
     # 5. 复制 libssl-3-x64.dll 和 libcrypto-3-x64.dll
     add_custom_command(TARGET meChatClient POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${LIBSSL_DLL_PATH}"
-        "$<TARGET_FILE_DIR:meChatClient>/libssl-3-x64.dll"
-    COMMENT "Copy libssl-3-x64.dll to output dir"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${LIBSSL_DLL_PATH}"
+            "$<TARGET_FILE_DIR:meChatClient>/libssl-3-x64.dll"
+        COMMENT "Copy libssl-3-x64.dll to output dir"
     )
 
     add_custom_command(TARGET meChatClient POST_BUILD
@@ -167,8 +169,6 @@ if(WIN32)
             "$<TARGET_FILE_DIR:meChatClient>/libcrypto-3-x64.dll"
         COMMENT "Copy libcrypto-3-x64.dll to output dir"
     )
-
-    endif()
 
     # 6. 复制 MinGW 运行时（可选）
     if(CMAKE_COMPILER_IS_GNUCXX OR MINGW)

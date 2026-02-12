@@ -23,6 +23,7 @@ LoginWindow::LoginWindow(QDialog *parent)
     initUI();// 初始化界面
     setBackground();// 设置背景
     signalConnect();// 信号槽连接
+    loadUserAvatarData();// 预加载用户头像数据
     showAvatar();// 显示头像
 }
 
@@ -316,8 +317,14 @@ void LoginWindow::signalConnect()// 信号槽连接
 void LoginWindow::registerSuccess()// 注册成功
 {
     switchToLogin();
-    userIDLineEdit->setText(registerWidget->getUserID()); // 将注册成功后返回的用户ID设置到登录窗口的用户名输入框中
+    QString newUserID = registerWidget->getUserID();
+    userIDLineEdit->setText(newUserID); // 将注册成功后返回的用户ID设置到登录窗口的用户名输入框中
     passwordLineEdit->setText("");
+    
+    // 更新本地存储的用户头像数据，添加新注册的用户
+    userAvatarMap[newUserID] = registerWidget->avatarPath;
+    qDebug() << "已将新注册用户" << newUserID << "的头像路径添加到本地存储";
+    
     userAvatar->setPixmap(QPixmap(registerWidget->avatarPath));// 显示注册成功后的用户头像
 }
 
@@ -411,50 +418,39 @@ bool LoginWindow::checkInputFields()// 检查输入框
 
 void LoginWindow::showAvatar()
 {
-    Database db;
-    if (!db.connect("login")) {
-        qDebug() << "数据库连接失败";
-        return;
-    }
-
-    QSqlQuery query(db.database());
-    query.prepare("SELECT `avatar_path` FROM `users` WHERE `user_id` = :userID");
-    query.bindValue(":userID", userIDLineEdit->text());
-
-    if (!query.exec()) {
-        qDebug() << "SQL 查询失败:" << query.lastError().text();
-        return;
-    }
-
-    if (query.next()) {
-        QString avatarPath = query.value("avatar_path").toString();
-        QPixmap pixmap;
-        
+    QString userID = userIDLineEdit->text();
+    QString avatarPath;
+    QPixmap pixmap;
+    
+    // 从本地存储的映射中查找头像路径
+    if (userAvatarMap.contains(userID)) {
+        avatarPath = userAvatarMap[userID];
         if (QFile::exists(avatarPath)) {
             pixmap = QPixmap(avatarPath);
         } else {
             pixmap = QPixmap(":/images/default_avatar.png");
         }
-
-        // 创建圆角头像
-        QPixmap roundedAvatar(80, 80);
-        roundedAvatar.fill(Qt::transparent);
-        
-        QPainter painter(&roundedAvatar);
-        painter.setRenderHint(QPainter::Antialiasing);
-        
-        // 创建圆形路径
-        QPainterPath path;
-
-        
-        path.addRoundedRect(0, 0, 80, 80,5,5);  // 完整圆形
-        painter.setClipPath(path);// 设置剪切路径
-
-        // 绘制缩放后的头像
-        painter.drawPixmap(0, 0, pixmap.scaled(80, 80, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        
-        userAvatar->setPixmap(roundedAvatar);
+    } else {
+        // 如果本地映射中没有找到，使用默认头像
+        pixmap = QPixmap(":/images/default_avatar.png");
     }
+
+    // 创建圆角头像
+    QPixmap roundedAvatar(80, 80);
+    roundedAvatar.fill(Qt::transparent);
+    
+    QPainter painter(&roundedAvatar);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    // 创建圆形路径
+    QPainterPath path;
+    path.addRoundedRect(0, 0, 80, 80, 5, 5);  // 圆角矩形
+    painter.setClipPath(path); // 设置剪切路径
+
+    // 绘制缩放后的头像
+    painter.drawPixmap(0, 0, pixmap.scaled(80, 80, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    
+    userAvatar->setPixmap(roundedAvatar);
 }
 
 void LoginWindow::switchToRegister()//切换到注册界面
@@ -535,4 +531,31 @@ void LoginWindow::switchToLogin()//切换到登录界面
     });
     
     animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void LoginWindow::loadUserAvatarData()
+{
+    Database db;
+    if (!db.connect("login")) {
+        qDebug() << "数据库连接失败，无法加载用户头像数据";
+        return;
+    }
+
+    QSqlQuery query(db.database());
+    if (!query.exec("SELECT `user_id`, `avatar_path` FROM `users`")) {
+        qDebug() << "SQL 查询失败:" << query.lastError().text();
+        return;
+    }
+
+    // 清空现有数据
+    userAvatarMap.clear();
+
+    // 读取所有用户数据
+    while (query.next()) {
+        QString userID = query.value("user_id").toString();
+        QString avatarPath = query.value("avatar_path").toString();
+        userAvatarMap[userID] = avatarPath;
+    }
+
+    qDebug() << "成功加载" << userAvatarMap.size() << "个用户的头像数据";
 }

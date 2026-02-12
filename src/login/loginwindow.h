@@ -9,6 +9,7 @@
 #include <QWidget>
 #include <QStackedWidget>       // 用于切换登录和注册界面
 #include <QPropertyAnimation>   // 用于切换登录和注册界面
+#include <QMap>                 // 用于存储用户ID到头像路径的映射
 
 
 QT_BEGIN_NAMESPACE
@@ -52,6 +53,7 @@ private:
     QString savedUserID;// 保存用户ID
     QString savedPassword;// 保存密码
     QString savedUserNick; // 保存用户昵称
+    QMap<QString, QString> userAvatarMap; // 存储用户ID到头像路径的映射
 
     // 动画相关
     QPropertyAnimation *m_flipAnimation;// 窗口翻转动画
@@ -73,6 +75,7 @@ private:
     void setBackground();// 设置背景
     void signalConnect();// 信号槽连接
     void registerSuccess();// 注册成功
+    void loadUserAvatarData();// 预加载用户头像数据
 protected:
     bool eventFilter(QObject *obj, QEvent *event)override;// 事件过滤器重写
 };
