@@ -40,21 +40,23 @@ endif()
 # === 可执行文件 ===
 add_executable(meChatClient
     src/main.cpp
-    src/login/loginwindow.cpp
-    src/login/loginwindow.h
-    src/login/registerwidget.cpp
-    src/login/registerwidget.h
+    src/core/main/mainwindow.cpp
+    src/core/main/mainwindow.h
+    src/core/login/loginwindow.cpp
+    src/core/login/loginwindow.h
+    src/core/login/registerwidget.cpp
+    src/core/login/registerwidget.h
+    src/core/chat/chatwindow.cpp
+    src/core/chat/chatwindow.h
+    src/core/chat/chatwindow.ui
+    src/core/extra/contactmessagebubble.cpp
+    src/core/extra/contactmessagebubble.h
+    src/core/extra/messagebubble.cpp
+    src/core/extra/messagebubble.h
     src/sql/database.h
     src/sql/database.cpp
-    src/chat/chatwindow.cpp
-    src/chat/chatwindow.h
-    src/chat/chatwindow.ui
-    src/chat/contactmessagebubble.cpp
-    src/chat/contactmessagebubble.h
-    src/chat/messagebubble.cpp
-    src/chat/messagebubble.h
-    src/chat/networkmanager.cpp
-    src/chat/networkmanager.h
+    src/network/networkmanager.cpp
+    src/network/networkmanager.h
     src/custom/meplaintextedit.cpp
     src/custom/meplaintextedit.h
     src/custom/clickablelabel.cpp
@@ -78,6 +80,11 @@ endif()
 
 # === 链接库 ===
 target_link_libraries(meChatClient PRIVATE Qt6::Core Qt6::Widgets Qt6::Sql Qt6::Network)
+
+# 链接 MySQL 库
+if(WIN32)
+    target_link_libraries(meChatClient PRIVATE "${MYSQL_ROOT_DIR}/lib/libmysql.lib")
+endif()
 
 # === 输出目录：统一放到 <build-dir>/bin 下 ===
 # 支持所有配置（Debug/Release/RelWithDebInfo...）
@@ -184,6 +191,19 @@ if(WIN32)
             endif()
         endforeach()
     endif()
+
+    # 7. 复制 Qt 核心库（开发环境需要）
+    set(QT_BIN_DIR "${QT_ROOT}/bin")
+    foreach(qt_dll Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Sql.dll Qt6Network.dll)
+        if(EXISTS "${QT_BIN_DIR}/${qt_dll}")
+            add_custom_command(TARGET meChatClient POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${QT_BIN_DIR}/${qt_dll}"
+                    "$<TARGET_FILE_DIR:meChatClient>/${qt_dll}"
+                COMMENT "Copy ${qt_dll}"
+            )
+        endif()
+    endforeach()
 endif()
 
 # 在构建时创建 images/avatar 目录

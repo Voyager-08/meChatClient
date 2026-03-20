@@ -1,8 +1,6 @@
 #include <QApplication>
-#include <QLoggingCategory>
-// login.cpp 或类似文件
-#include "login/LoginWindow.h"
-#include "chat/ChatWindow.h"
+#include <QLoggingCategory>// 用于日志记录
+#include "src/core/main/mainwindow.h"
 
 #ifdef QT_NO_DEBUG
 // 在Release版本中禁用调试消息
@@ -45,12 +43,8 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(messageHandler);
 #endif
 
-    LoginWindow login;
-    if(login.exec() == QDialog::Accepted)
-    {
-        ChatWindow w(login.getUserId());
-        w.show();
-        return app.exec();
-    }
-    return 0;
+    MainWindow window;
+    window.show();
+    return app.exec();
+    
 }

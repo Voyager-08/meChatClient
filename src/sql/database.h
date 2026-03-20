@@ -11,7 +11,6 @@ class MainWindow;//前向声明
 class Database
 {
 public:
-    Database();
     ~Database();
     QSqlDatabase database() const { return db; }// 获取数据库连接
 

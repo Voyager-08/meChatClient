@@ -1,10 +1,6 @@
 #include "database.h"
 #include <QSqlRecord>
 
-Database::Database()
-{
-}
-
 Database::~Database()
 {
     if (db.isOpen()) {
