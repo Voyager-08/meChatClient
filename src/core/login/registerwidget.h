@@ -8,11 +8,13 @@
 #include <QCheckBox>
 
 class ClickableLabel;
+class NetworkManager;
+
 class RegisterWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RegisterWidget(QWidget *parent = nullptr);
+    explicit RegisterWidget(QWidget *parent = nullptr, NetworkManager *networkManager = nullptr);
     ~RegisterWidget();
     QString getUserID() const;// 获取用户名
 
@@ -24,7 +26,7 @@ public slots :
     void onPasswordChanged(const QString &text);// 密码框内容改变
     void onSelectAvatar();// 选择头像
 
-public:
+private:
     void initUI();
     void setBackground(); // 添加背景设置函数
     void signalConnection();// 信号连接
@@ -59,7 +61,9 @@ public:
     QString userID; // 用户ID
     QString password;// 密码
     QString userNick; // 用户昵称
-    QString avatarPath=":/images/default_avatar.png"; // 头像路径
+    QString avatarPath=":/images/avatar/default.png"; // 头像路径
+    // 网络管理器
+    NetworkManager *networkManager; // 全局网络管理器
 };
 
 #endif // REGISTERWIDGET_H

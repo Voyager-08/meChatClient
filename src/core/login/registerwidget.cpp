@@ -13,13 +13,14 @@
 #include <QPainter>                     // 绘图
 #include <QGraphicsDropShadowEffect>    // 添加阴影效果支持
 #include <QRegularExpression>           // 正则表达式
+#include <QThread>                      // 线程，用于延迟关闭对话框
 
 #include "registerwidget.h"
-#include "src/sql/database.h"// 包含数据库头文件
 #include "src/custom/clickablelabel.h"
+#include "src/network/networkmanager.h"
 
-RegisterWidget::RegisterWidget(QWidget *parent)
-    : QWidget(parent)
+RegisterWidget::RegisterWidget(QWidget *parent, NetworkManager *networkManager)
+    : QWidget(parent), networkManager(networkManager)
 {
     initUI();
     signalConnection();
@@ -251,11 +252,10 @@ void RegisterWidget::initUI()
     "font-weight: bold;"
      "}";
     errorLabel->setStyleSheet(errorLabelStyle);
-    errorLabel->setGeometry(30, 335, 340, 20);
+    errorLabel->setGeometry(35, 325, 340, 20);
     errorLabel->hide();
-
-    
 }
+
 
 void RegisterWidget::setBackground()
 {
@@ -318,56 +318,102 @@ bool RegisterWidget::eventFilter(QObject *obj, QEvent *event)
 
 bool RegisterWidget::onRegisterClicked()
 {
-    qDebug() << "Register clicked";
+    qDebug() << "注册按钮点击事件触发";
     if (!validateInput()) // 验证输入，如果验证失败，则返回
     {
         return false;
     }
+    if(!networkManager->isConnected())// 检查网络连接状态
+    {
+        showError("服务器连接失败！");// 显示错误信息
+        return false;
+    }
 
+    QDialog registerDialog(this);//创建栈对话框
+    registerDialog.setWindowTitle("用户注册");
+    registerDialog.setModal(true);//设置为模态对话框，用户必须先关闭对话框才能继续操作其他窗口
+    registerDialog.setFixedSize(150, 80);
+    // 创建标签并设置初始文本
+    QLabel registerLabel("注册中.", &registerDialog);
+    registerLabel.setGeometry(30, 30, 140, 20);// 设置标签位置和大小，左上角坐标为(30,30)，宽度为140，高度为20
+    registerLabel.setAlignment(Qt::AlignLeft);// 左对齐
+    registerLabel.setFont(QFont("KaiTi", 12, QFont::Bold));//设字体大小为12px，加粗
+    // 点数计数器（初始为1，因为初始文本已包含一个点）
+    int dotCount = 1;
+    // 创建定时器
+    QTimer timer(&registerDialog);
+    timer.setInterval(400); // 400毫秒间隔
+    // 连接定时器信号
+    connect(&timer, &QTimer::timeout, &registerDialog, [&]() mutable {
+        // 递增点数
+        dotCount++;
+        //qDebug()<<"dotCount:"<<dotCount;
+        QString newText = "注册中" + QString(dotCount, '.');
+        registerLabel.setText(newText);
+        if (dotCount >=3) dotCount = 0; // 重置到1个点
+    });
+    timer.start();// 启动定时器
+ 
     QString userID = userIDLineEdit->text();
     QString userNick = userNickLineEdit->text(); // 获取用户昵称
     QString password = passwordLineEdit->text();
-    qDebug()<<"      ID:"<<userID;
+    qDebug()<<"   ID:"<<userID;
     qDebug()<<" Nickname:"<<userNick;
     qDebug()<<"password:"<<password;
-    Database registerDb;
-    if (!registerDb.connect("register")) {
-        qDebug() << "数据库连接失败!";
-        return false;
-    }
-    QSqlQuery query(registerDb.database());
-    qDebug()<<"数据库语句执行";
-    query.prepare("SELECT user_id FROM users WHERE user_id = ?");
-    query.addBindValue(userID);
+    bool isSuccess = false;
 
-    if (!query.exec()) {
-        showError("数据库查询出错: " + query.lastError().text());
-        return false;
-    }
+    //显示定时器,显示结果1s后关闭对话框
+    QTimer delayTimer(&registerDialog);
+    delayTimer.setSingleShot(true);// 单次触发，注册成功或失败后关闭对话框
+    // 注册成功定时器
+    QTimer delaySuccTimer(&registerDialog);
+    delaySuccTimer.setSingleShot(true);// 单次触发，注册成功或失败后关闭对话框
+    // 注册失败定时器
+    QTimer delayFailTimer(&registerDialog);
+    delayFailTimer.setSingleShot(true);// 单次触发，注册成功或失败后关闭对话框
 
-    if (query.next()) {
-        showError("用户ID已存在，请选择其他用户ID");
-        // 添加输入框红色闪烁效果
-        highlightError(userIDLineEdit);
-        userIDLineEdit->setFocus();
+    //接收注册信号
+    // 注册成功信号，触发注册成功定时器，让注册中显示2000毫秒
+    connect(networkManager, &NetworkManager::registerSuccess, &registerDialog, [&]() {
+        qDebug()<<"注册成功！";
+        isSuccess = true;
+        delaySuccTimer.start(2000); // 让注册中显示2000毫秒
+    });
+    // 注册失败信号，触发注册失败定时器，让注册中显示2000毫秒
+    connect(networkManager, &NetworkManager::registerFailed, &registerDialog, [&](QString errorString) {
+        timer.stop();// 停止定时器
+        registerDialog.close();// 关闭对话框
+        qDebug()<<"注册失败!"<<errorString;// 显示注册失败信息
+        showError(errorString);// 显示错误信息
         return false;
-    }
-    QString email="NULL";
-    // 插入新用户
-    query.prepare("INSERT INTO users (user_id, user_nick, password, email, avatar_path) "
-                "VALUES (?, ?, ?, ?, ?)");
-    query.addBindValue(userID);      // user_id
-    query.addBindValue(userNick);    // user_nick ← 现在使用真正的昵称变量
-    query.addBindValue(password);    // password
-    query.addBindValue(email);       // email
-    query.addBindValue(avatarPath);  // avatar_path
+        isSuccess = false;
+        delayFailTimer.start(2000); // 让注册中显示2000毫秒
+    });
+    
+    // 注册成功定时器信号，显示注册成功结果1s后关闭对话框
+    connect(&delaySuccTimer, &QTimer::timeout, &registerDialog, [&]() {
+        timer.stop();// 停止定时器
+        registerLabel.setText("注册成功！");
+        qDebug()<<"成功显示";
+        delayTimer.start(1000); // 显示注册成功1000毫秒
+    });
+    // 注册失败定时器信号，显示注册失败结果1s后关闭对话框
+    connect(&delayFailTimer, &QTimer::timeout, &registerDialog, [&]() {
+        timer.stop();// 停止定时器
+        registerLabel.setText("注册失败！");// 显示注册失败信息
+        qDebug()<<"失败显示";
+        delayTimer.start(1000); // 显示注册失败1000毫秒
+    });
+    // 注册信号定时器信号，显示注册结果1s后关闭对话框
+    connect(&delayTimer, &QTimer::timeout, &registerDialog, [&]() {
+        registerDialog.close();// 关闭对话框
+    });
 
-    if (!query.exec()) {
-        qDebug() << "Error inserting user_id into database: " << query.lastError().text();
-        showError("注册失败: " + query.lastError().text());
-        return false;
-    }
-
+    // 调用网络管理器注册用户
+    networkManager->registerUser(userID, userNick, password);// 注册用户，传递用户ID、昵称、密码
+    registerDialog.exec();// 显示对话框，等待用户操作
+    if(!isSuccess)return false;
+    
     // 保存用户ID以便返回给调用者
     this->userID = userID;
     userIDLineEdit->clear();
@@ -375,7 +421,6 @@ bool RegisterWidget::onRegisterClicked()
     passwordLineEdit->clear();
     confirmPasswordLineEdit->clear();
     showPasswordCheckBox->setChecked(false);
-    QMessageBox::information(this, "用户注册", "注册成功！");
     emit registrationSucceeded(); // 发送注册成功的信号
     return true;
 }
@@ -406,6 +451,9 @@ void RegisterWidget::onSelectAvatar()
         {
             // 将图片缩放为80x80大小，保持宽高比，并使用平滑变换
             QPixmap scaledPixmap = pixmap.scaled(80, 80, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            //保存用户头像到本地文件images/avatar/userID.png
+            QString savePath = QString("images/avatar/%1.png").arg(userID);
+            scaledPixmap.save(savePath);
             // 设置按钮的图标为缩放后的图片
             avatarButton->setIcon(QIcon(scaledPixmap));
             // 设置按钮图标的显示大小为80x80
@@ -465,8 +513,6 @@ bool RegisterWidget::validateInput()// 验证输入
 
     if (password != confirmPassword) {
         showError("两次输入的密码不一致!");
-        passwordLineEdit->selectAll();
-        passwordLineEdit->setFocus();
         highlightError(passwordLineEdit);
         highlightError(confirmPasswordLineEdit);
         return false;

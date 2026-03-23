@@ -22,7 +22,6 @@ LoginWindow::LoginWindow(QWidget *parent, NetworkManager *networkManager)
     initUI();// 初始化界面
     setBackground();// 设置背景
     signalConnect();// 信号槽连接
-    loadUserAvatarData();// 预加载用户头像数据
     showAvatar();// 显示头像
     linkServer();// 连接服务器
 }
@@ -43,7 +42,7 @@ void LoginWindow::initUI()
     setWindowIcon(QIcon(":/images/10.png"));
 
     loginWidget=new QWidget(this);// 主登录窗口组件
-    registerWidget=new RegisterWidget(this);// 主注册窗口组件
+    registerWidget=new RegisterWidget(this,m_networkManager);// 主注册窗口组件
     stackedWidget=new QStackedWidget(this);// 用于切换登录和注册界面
     stackedWidget->addWidget(loginWidget);
     stackedWidget->addWidget(registerWidget);
@@ -276,9 +275,9 @@ bool LoginWindow::login()//登录功能
     QJsonDocument doc(loginObj);
     QByteArray jsonData = doc.toJson(QJsonDocument::Compact) + "\n"; // 必须加 \n！
     // 先断开旧的连接，再建立新的连接，确保不重复
-    disconnect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginMainwindow);
+    disconnect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
     disconnect(m_networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
-    connect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginMainwindow);
+    connect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
     connect(m_networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
 
     m_networkManager->sendRawData(jsonData);// 发送登录请求
@@ -329,7 +328,6 @@ void LoginWindow::signalConnect()// 信号槽连接
     connect(forgetPasswordButton, &QPushButton::clicked, this, &LoginWindow::onForgetPassword);
     //账号输入框内容改变时显示头像
     connect(userIDLineEdit, &QLineEdit::textChanged, this, &LoginWindow::showAvatar);
-    
 }
 
 void LoginWindow::registerSuccess()// 注册成功
@@ -338,12 +336,8 @@ void LoginWindow::registerSuccess()// 注册成功
     QString newUserID = registerWidget->getUserID();
     userIDLineEdit->setText(newUserID); // 将注册成功后返回的用户ID设置到登录窗口的用户名输入框中
     passwordLineEdit->setText("");
-    
-    // 更新本地存储的用户头像数据，添加新注册的用户
-    userAvatarMap[newUserID] = registerWidget->avatarPath;
-    qDebug() << "已将新注册用户" << newUserID << "的头像路径添加到本地存储";
-    
     userAvatar->setPixmap(QPixmap(registerWidget->avatarPath));// 显示注册成功后的用户头像
+    qDebug()<<"用户头像:"<<registerWidget->avatarPath;
 }
 
 void LoginWindow::togglePasswordVisibility()// 切换密码可见性
@@ -430,23 +424,25 @@ void LoginWindow::showAvatar()
     QString avatarPath;
     QPixmap pixmap;
     
-    // 从本地存储的映射中查找头像路径
-    if (userAvatarMap.contains(userID)) {
-        avatarPath = userAvatarMap[userID];
-        if (QFile::exists(avatarPath)) {
-            pixmap = QPixmap(avatarPath);
-        } else {
-            pixmap = QPixmap(":/images/default_avatar.png");
-        }
-    } else {
-        // 如果本地映射中没有找到，使用默认头像
-        pixmap = QPixmap(":/images/default_avatar.png");
+    // 从同目录images/avatar/中查找头像路径
+    avatarPath = "./images/avatar/" + userID + ".png";
+    
+    if (QFile::exists(avatarPath))
+    {
+         pixmap = QPixmap(avatarPath);
+         qDebug() << ".\n头像加载成功!";
+         qDebug() << "头像路径:" << avatarPath;
+    }
+    else
+    {
+        qDebug() << ".\n头像加载失败，文件不存在或加载时错误!";
+        qDebug() << "头像路径:" << avatarPath;
+        pixmap = QPixmap(":/images/avatar/default.png");
     }
 
     // 创建圆角头像
     QPixmap roundedAvatar(80, 80);
     roundedAvatar.fill(Qt::transparent);
-    
     QPainter painter(&roundedAvatar);
     painter.setRenderHint(QPainter::Antialiasing);
     
@@ -541,17 +537,9 @@ void LoginWindow::switchToLogin()//切换到登录界面
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void LoginWindow::loginMainwindow(const QString userID)
+void LoginWindow::loginChatwindow(const QString userID)
 {
     qDebug() << "登录成功，用户ID：" << userID;
-    
     // 发送登录成功信号给主窗口，主窗口负责创建 ChatWindow 和页面切换
     emit userLoggedIn(userID, savedPassword);
-}
-
-void LoginWindow::loadUserAvatarData()
-{
-    // 清空现有数据
-    userAvatarMap.clear();
-    qDebug() << "成功加载" << userAvatarMap.size() << "个用户的头像数据";
 }

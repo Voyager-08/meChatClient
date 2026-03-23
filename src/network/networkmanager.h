@@ -34,7 +34,7 @@ public:
     void sendMessage(const networkData &data); // 发送消息结构体
     void sendRawData(const QByteArray &data); // 发送原始数据
     bool isConnected() const { return m_socket && m_socket->state() == QTcpSocket::ConnectedState; }// 检查是否已连接到服务器
-    
+    void registerUser(const QString &userId, const QString &userNick, const QString &password); // 注册用户
 
 signals:
     void messageReceived(const networkData &data);
@@ -44,7 +44,9 @@ signals:
     void userStatusChanged(const QString &userId, bool online);
     void loginSuccess(const QString &userId); // 登录成功信号，携带用户ID
     void loginFailed(const QString &errorString); // 登录失败信号，携带错误信息
-    
+    void registerSuccess(const QString &userId); // 注册成功信号，携带用户ID
+    void registerFailed(const QString &errorString); // 注册失败信号，携带错误信息
+
 private slots:
     void onReadyRead();
     void onError();

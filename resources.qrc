@@ -7,7 +7,6 @@
         <file>images/6.png</file>
         <file>images/7.png</file>
         <file>images/8.png</file>
-        <file>images/default_avatar.png</file>
         <file>images/icon1.png</file>
         <file>images/icon10.png</file>
         <file>images/icon2.png</file>
@@ -21,5 +20,6 @@
         <file>images/icon_user.png</file>
         <file>images/icon_check.svg</file>
         <file>images/icon_check.png</file>
+        <file>images/avatar/default.png</file>
     </qresource>
 </RCC>

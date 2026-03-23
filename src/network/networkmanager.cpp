@@ -71,6 +71,25 @@ void NetworkManager::sendRawData(const QByteArray &data)
     qDebug() << "客户端发送原始数据:" << data;
 }
 
+void NetworkManager::registerUser(const QString &userId, const QString &userNick, const QString &password)
+{
+    if (m_socket->state() != QTcpSocket::ConnectedState) 
+    {        
+        qDebug() << "网络未连接，无法发送注册消息！";
+        return;
+    }
+    QJsonObject messageObj;// 创建一个JSON对象来存储注册消息数据
+    messageObj["type"] = "register";
+    messageObj["userId"] = userId;
+    messageObj["userNick"] = userNick;
+    messageObj["password"] = password;
+    QJsonDocument doc(messageObj);// 将JSON对象转换为JSON文档，以便序列化为字符串
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact); // 使用紧凑格式，节省带宽
+    qDebug() << "发送注册消息:" << jsonData; // qDebug 能直接打印 QByteArray
+    m_socket->write(jsonData + "\n"); // 发送 + 换行符
+    m_socket->flush(); // 确保数据立即发送
+}
+
 /**
  * @brief NetworkManager::onReadyRead
  * 处理网络数据就绪的槽函数，当有数据可读时被调用
@@ -124,6 +143,20 @@ void NetworkManager::onReadyRead()
             QString userID = obj["user_id"].toString();  // 从JSON对象中获取用户ID并转换为QString类型
             bool online = obj["online"].toBool();  // 从JSON对象中获取在线状态并转换为bool类型
             emit userStatusChanged(userID, online);  // 发射用户状态变更信号，传递用户ID和在线状态
+        }
+        else if (msgType == "register_result") 
+        {
+            qDebug() << "收到消息类型为register_result的消息";
+            if (obj["result"].toBool())
+            {
+                QString userId = obj["userId"].toString();
+                emit registerSuccess(userId);
+            }
+            else
+            {
+                QString errorString = obj["reason"].toString();
+                emit registerFailed(errorString);
+            }
         }
     }
 }

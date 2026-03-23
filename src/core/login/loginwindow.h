@@ -11,8 +11,6 @@
 #include <QPropertyAnimation>   // 用于切换登录和注册界面
 #include <QMap>                 // 用于存储用户ID到头像路径的映射
 
-
-
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 class ChatWindow;// 前向声明聊天窗口类
@@ -59,7 +57,6 @@ private:
     QString savedUserID;// 保存用户ID
     QString savedPassword;// 保存密码
     QString savedUserNick; // 保存用户昵称
-    QMap<QString, QString> userAvatarMap; // 存储用户ID到头像路径的映射
 
     // 动画相关
     QPropertyAnimation *m_flipAnimation;// 窗口翻转动画
@@ -77,7 +74,7 @@ private slots:
     void loginError(const QString &errorString);// 登录错误处理
     void switchToRegister();//切换到注册界面
     void switchToLogin();//切换到登录界面
-    void loginMainwindow(const QString userID);// 登录成功后打开主窗口
+    void loginChatwindow(const QString userID);// 登录成功后打开聊天窗口
 //类函数
 private:
     void linkServer();// 连接服务器
@@ -85,7 +82,6 @@ private:
     void setBackground();// 设置背景
     void signalConnect();// 信号槽连接
     void registerSuccess();// 注册成功
-    void loadUserAvatarData();// 预加载用户头像数据
 protected:
     bool eventFilter(QObject *obj, QEvent *event)override;// 事件过滤器重写
 };
