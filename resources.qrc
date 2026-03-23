@@ -19,5 +19,7 @@
         <file>images/icon9.png</file>
         <file>images/icon_password.png</file>
         <file>images/icon_user.png</file>
+        <file>images/icon_check.svg</file>
+        <file>images/icon_check.png</file>
     </qresource>
 </RCC>

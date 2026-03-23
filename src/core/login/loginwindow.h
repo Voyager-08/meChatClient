@@ -55,6 +55,7 @@ private:
     QPushButton* registerButton; // 注册按钮
     bool resetLineEdit=0;// 是否重置输入框
     QString originalStyle;// 保存原始样式
+    QString showPasswordButtonStyle;// 保存显示密码复选框样式
     QString savedUserID;// 保存用户ID
     QString savedPassword;// 保存密码
     QString savedUserNick; // 保存用户昵称

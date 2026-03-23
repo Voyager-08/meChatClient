@@ -129,18 +129,38 @@ void LoginWindow::initUI()
 
     // 添加显示密码复选框
     showPasswordButton = new QCheckBox("显示密码", loginWidget);
-    showPasswordButton->setGeometry(200, 267, 80, 25);
-    showPasswordButton->setStyleSheet(
+    showPasswordButton->setGeometry(200, 267, 100, 25);
+    showPasswordButtonStyle =(
     "QCheckBox {"
-    "font: 15px 'KaiTi', '楷体';"
-    "color: rgba(0, 0, 0, 0.7);"
-    "border: none;"
+    "    font: 14px 'KaiTi', '楷体';"
+    "    color: rgba(0, 0, 0, 0.8);"
+    "    spacing: 8px;"
     "}"
     "QCheckBox:hover {"
-    "color: rgba(0, 38, 255, 1);"
+    "    color:  rgba(13, 134, 255, 1);"
+    "}"
+    "QCheckBox::indicator {"
+    "    width: 14px;"
+    "    height: 14px;"
+    "    border-radius: 9px;"
+    "    border: 2px solid #ccc;"
+    "    background: white;"
+    "}"
+    "QCheckBox::indicator:hover {"
+    "    background: rgba(13, 134, 255, 0.68);"
+    "    border-color: rgba(13, 134, 255, 1);"
+    "}"
+    "QCheckBox::indicator:checked {"
+    "    border: 2px solid rgba(112, 112, 112, 1);"
+    "    image: url(:/images/icon_check.png);"
+    "}"
+    "QCheckBox::indicator:checked:hover {"
+    "    border: 2px solid rgba(112, 112, 112, 1);"
+    "    image: url(:/images/icon_check.png);"
     "}");
+    showPasswordButton->setStyleSheet(showPasswordButtonStyle);
     showPasswordButton->setCursor(Qt::PointingHandCursor); // 设置鼠标悬停时的手型光标
-
+    
     // 添加忘记密码按钮
     forgetPasswordButton = new QPushButton(loginWidget);
     forgetPasswordButton->setText("忘记密码？");
@@ -293,11 +313,7 @@ void LoginWindow::loginError(const QString &errorString)
     "color: rgba(255, 0, 0, 1);"
     "}");
     // 设置显示密码复选框为高亮不可用状态
-    showPasswordButton->setStyleSheet("QCheckBox {"
-    "font: 14px 'KaiTi', '楷体';"
-    "color: rgba(255, 255, 255, 0.7);"
-    "border: none;"
-    "}");
+    showPasswordButton->setStyleSheet(showPasswordButtonStyle);
     showPasswordButton->setEnabled(false);
 }
 
@@ -355,14 +371,8 @@ bool LoginWindow::eventFilter(QObject *obj, QEvent *event)
 
 void LoginWindow::resetLineEditStyle(QLineEdit *lineEdit )// 重置输入框样式
 {
-    showPasswordButton->setStyleSheet("QCheckBox {"
-    "font: 14px 'KaiTi', '楷体';"
-    "color: rgba(0, 0, 0, 1);"
-    "border: none;"
-    "}"
-    "QCheckBox:hover {"
-    "color:rgba(0, 38, 255, 0.7) ;"
-    "}");
+    showPasswordButton->setStyleSheet(showPasswordButtonStyle);
+    showPasswordButton->setCursor(Qt::PointingHandCursor); // 设置鼠标悬停时的手型光标
     showPasswordButton->setEnabled(true);
     userIDLineEdit->setPlaceholderText("用户名");
     passwordLineEdit->setPlaceholderText("密码");
@@ -403,11 +413,7 @@ bool LoginWindow::checkInputFields()// 检查输入框
         "color: rgba(255, 0, 0, 1);"
         "}");
         // 设置显示密码复选框为高亮不可用状态
-        showPasswordButton->setStyleSheet("QCheckBox {"
-        "font: 14px 'KaiTi', '楷体';"
-        "color: rgba(255, 255, 255, 1);"
-        "border: none;"
-        "}");
+        showPasswordButton->setStyleSheet(showPasswordButtonStyle);
         showPasswordButton->setEnabled(false);
     }
     if(userIDLineEdit->text().isEmpty()||passwordLineEdit->text().isEmpty())

@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QFile>
 #include "ui_chatwindow.h"
 
 //自定义头文件
@@ -47,7 +48,6 @@ ChatWindow::ChatWindow(QString userID,QWidget *parent,NetworkManager *networkMan
     initialStackWideget();// 初始化区域
     connectSignals();// 连接信号槽
     linkServer();// 连接服务器
-    qDebug() << "ChatWindow initialized for user:" << userID;
 }
 
 ChatWindow::~ChatWindow()
@@ -59,24 +59,8 @@ void ChatWindow::initialUI()// 初始化界面
 {
     QIcon windowIcon(":/images/10.png");
     setWindowIcon(windowIcon);
-    // // 设置无边框，实现自定义标题栏和窗口边框以及拉伸窗口
-    // setMouseTracking(true); //允许无按键时触发 mouseMoveEvent
     
-    // 注意：当 ChatWindow 作为子 widget 时，不需要设置 setWindowFlags
-    // setWindowFlags 只对顶级窗口有效
-    // setWindowFlags(windowFlags() | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint);
-    // setWindowFlags(Qt::FramelessWindowHint);
-    
-    setMinimumSize(700, 600); // 设置窗口最小尺寸
-
-    // buttonWidgets  << ui->avatar<<ui->moreInformation
-    //           << ui->message<<ui->nickname
-    //           << ui->contact
-    //           << ui->moments
-    //           << ui->search
-    //           << ui->more
-    //           <<ui->messageArea<<ui->inputBox<<ui->sent;
-    // // 设置聊天记录区域和输入框区域的高度比例
+    setMinimumSize(850, 600); // 设置窗口最小尺寸
     QList<int> sizes;
     sizes << 400 << 100;  // 设置聊天记录区域和输入框区域的比例
     ui->information->setSizes(sizes);
@@ -93,45 +77,6 @@ void ChatWindow::initialUI()// 初始化界面
     "QPushButton:pressed {"
     "   background-color: rgba(200,200,200,100);" // 按下时半透明效果
     "}";
-    /*
-    // 设置顶部菜单栏
-    ui->closeButton->setToolTip("关闭");
-    ui->closeButton->setText("");
-    ui->minimizeButton->setToolTip("最小化");
-    ui->minimizeButton->setText("");
-    ui->minimizeButton->setBackgroundRole(QPalette::ButtonText);// 设置按钮背景角色
-    ui->minimizeButton->setIconSize(QSize(30,30));
-    ui->maximizeButton->setToolTip("最大化");// 设置按钮提示
-    ui->maximizeButton->setText("");
-    ui->maximizeButton->setIconSize(QSize(30,30));
-    ui->closeButton->setIcon(QIcon(":/images/icon10.png"));
-    ui->closeButton->setIconSize(QSize(30, 30));
-    // 优化标题栏按钮
-    ui->closeButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: transparent;"
-        "   border: none;"
-        "   border-radius: 15px;"
-        "   width: 30px;"
-        "   height: 30px;"
-        "   font-size: 16px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: rgba(255, 0, 0, 50);"
-        "   border-radius: 15px;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: rgba(255, 0, 0, 80);"
-        "   border-radius: 15px;"
-        "}"
-    );
-    ui->minimizeButton->setIcon(QIcon(":/images/icon6.png"));
-    ui->minimizeButton->setIconSize(QSize(30, 30));
-    ui->minimizeButton->setStyleSheet(QSSmenuBarWidget);
-    ui->maximizeButton->setIcon(QIcon(":/images/icon7.png"));
-    ui->maximizeButton->setIconSize(QSize(30, 30));
-    ui->maximizeButton->setStyleSheet(QSSmenuBarWidget);// 设置按钮图标和大小
-    */
     ui->extendBtn->setIcon(QIcon(":/images/12.png"));
     ui->extendBtn->setIconSize(QSize(21, 21));
     ui->extendBtn->setStyleSheet(
@@ -140,7 +85,7 @@ void ChatWindow::initialUI()// 初始化界面
         "background-color: transparent;"
     "}"
     "QToolButton:hover {"
-    "    border: #65a3ff 1px solid;"
+    "    border: rgba(111, 111, 111, 1) 1px solid;"
         "background-color: rgba(255,255,255,50);" // 鼠标悬停时半透明效果
     "}"
     "QToolButton:pressed {"
@@ -643,6 +588,10 @@ void ChatWindow::animatePageTransition(QWidget *widget)
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
+void ChatWindow::refreshContacts()
+{
+}
+
 void ChatWindow::paintRdiusPixmap(QLabel*label,const QString paintPath,int xRdius=0,int yRdius=0)
 {
     int w = label->width();
@@ -665,280 +614,16 @@ void ChatWindow::paintRdiusPixmap(QLabel*label,const QString paintPath,int xRdiu
     label->setPixmap(pixmapPath);
 }
 
-/*void ChatWindow::mousePressEvent(QMouseEvent *event)
+void ChatWindow::loadAvatar(QString userID)//放进子线程中加载头像，避免阻塞主线程
 {
-    qDebug() << "鼠标按下";
-    if (event->button() == Qt::LeftButton) {
-        isLeftButtonPressed = true;
-        resizeMode = getResizeMode(event->pos());
-        
-        // 标题栏区域 (高度40像素)
-        QRect titleBarRect(0, 0, width(), 40);
-        bool inTitleBar = titleBarRect.contains(event->pos());// 检查鼠标是否在标题栏内
-        
-        // 检查是否在按钮区域（避免覆盖按钮）
-        bool inButtonArea = isNonDraggableWidget(childAt(event->pos()));
-        
-        if (resizeMode != ResizeMode::None)//鼠标在窗口外
-        {
-            updateCursor(resizeMode);
-            event->accept();
-        }
-        else if (inTitleBar||!inButtonArea)// 不在按钮区域或者不在窗口外
-        {
-            // 在标题栏区域且不在按钮上，允许拖动
-            setCursor(Qt::SizeAllCursor); // 手型光标
-            dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-            isDragging = true;
-            event->accept();
-        }
-        else 
-        {
-            // 其他区域不处理
-            isDragging = false;
-            event->ignore();
-        }
-    }
-    QWidget::mousePressEvent(event);
-}
-
-void ChatWindow::mouseMoveEvent(QMouseEvent *event)
-{
-    //qDebug() << "鼠标移动";
-    bool eventHandled = false;
-    
-    if (resizeMode != ResizeMode::None && event->buttons() & Qt::LeftButton) {
-        updateCursor(resizeMode);
-        resizeWindow(event->globalPosition().toPoint());
-        event->accept();
-        eventHandled = true;
-    }
-    else if (event->buttons() & Qt::LeftButton && isDragging) {
-        move(event->globalPosition().toPoint() - dragPosition);
-        event->accept();
-        eventHandled = true;
-    }
-    else {
-        // 仅在非拖动/调整大小时更新光标
-        resizeMode = getResizeMode(event->pos());
-        if (!isDragging) {
-            updateCursor(resizeMode);
-        }
-    }
-    if (!eventHandled) {
-        QWidget::mouseMoveEvent(event);
-    }
-}
-
-void ChatWindow::mouseReleaseEvent(QMouseEvent *event)
-{
-    //qDebug() << "鼠标释放";
-    resizeMode = ResizeMode::None;
-    isLeftButtonPressed = false;
-    
-    // 重置光标状态
-    if (isDragging) {
-        setCursor(Qt::ArrowCursor);
-        isDragging = false;
+    //从程序相同目录下的images/avatar文件夹中加载头像，%1为用户ID占位符
+    QString avatarPath = QString("./images/avatar/%1.png").arg(userID);
+    if (QFile::exists(avatarPath)) {
+        paintRdiusPixmap(ui->avatar, avatarPath);
     } else {
-        updateCursor(ResizeMode::None);
-    }
-    
-    QWidget::mouseReleaseEvent(event);
-}
-
-void ChatWindow::leaveEvent(QEvent *event)
-{
-    //qDebug() << "鼠标离开窗口";
-    // 确保离开窗口时恢复默认光标
-    if (!isDragging) {
-        updateCursor(ResizeMode::None);
-    }
-    QWidget::leaveEvent(event);
-}
-
-// 获取当前鼠标所在的边缘位置
-ResizeMode ChatWindow::getResizeMode(const QPoint &pos)// 根据鼠标位置获取调整模式
-{
-    QRect rect = this->rect();// 获取窗口矩形区域
-    // 检查鼠标是否在窗口边缘区域
-    // 在 Qt 的坐标系统中，鼠标（以及所有 widget）的坐标原点 (0, 0) 默认位于左上角，并且：
-    // X 轴向右增大（→）
-    // Y 轴向下增大（↓）
-    // 这是 Qt 遵循的 标准屏幕坐标系，与大多数 GUI 框架一致。
-    if (pos.x() <= borderWidth && pos.y() <= borderWidth)// 在左上角
-        return ResizeMode::TopLeft;
-    else if (pos.x() >= rect.width() - borderWidth && pos.y() <= borderWidth)// 在右上角
-        return ResizeMode::TopRight;
-    else if (pos.x() <= borderWidth && pos.y() >= rect.height() - borderWidth)// 在左下角
-        return ResizeMode::BottomLeft;
-    else if (pos.x() >= rect.width() - borderWidth && pos.y() >= rect.height() - borderWidth)// 在右下角
-        return ResizeMode::BottomRight;
-    else if (pos.x() <= borderWidth)// 在左边缘
-        return ResizeMode::Left;
-    else if (pos.x() >= rect.width() - borderWidth)// 在右边缘
-        return ResizeMode::Right;
-    else if (pos.y() <= borderWidth)// 在上边缘
-        return ResizeMode::Top;
-    else if (pos.y() >= rect.height() - borderWidth)//  在下边缘
-        return ResizeMode::Bottom;
-    return ResizeMode::None;// 不在边缘区域
-}
-void ChatWindow::resizeWindow(const QPoint &globalPos)// 根据鼠标位置调整窗口大小
-{
-    QRect rect = frameGeometry();// 获取窗口矩形区域逻辑窗口范围
-    QPoint topLeft = rect.topLeft();// 获取左上角全局坐标
-    QPoint bottomRight = rect.bottomRight();// 获取右下角全局坐标
-
-    switch (resizeMode) {// 根据调整模式修改窗口矩形区域
-    case ResizeMode::Left:// 左边缘
-        rect.setLeft(globalPos.x());      // 修改rect获得的窗口左边缘位置
-        break;
-    case ResizeMode::Right:
-        rect.setRight(globalPos.x());
-        break;
-    case ResizeMode::Top:
-        rect.setTop(globalPos.y());
-        break;
-    case ResizeMode::Bottom:
-        rect.setBottom(globalPos.y());
-        break;
-    case ResizeMode::TopLeft:
-        rect.setTopLeft(globalPos);
-        break;
-    case ResizeMode::TopRight:
-        rect.setTopRight(globalPos);
-        break;
-    case ResizeMode::BottomLeft:
-        rect.setBottomLeft(globalPos);
-        break;
-    case ResizeMode::BottomRight:
-        rect.setBottomRight(globalPos);
-        break;
-    default:
-        return;
-    }
-
-    // 确保窗口不会变得太小
-    if (rect.width() >= minimumWidth() && rect.height() >= minimumHeight()) {
-        setGeometry(rect.normalized());
+        paintRdiusPixmap(ui->avatar, "./images/avatar/default.png");
     }
 }
-
-void ChatWindow::updateCursor(ResizeMode mode)
-{
-    //qDebug() << "更新光标: " << (int)mode;
-    switch (mode) {
-    case ResizeMode::Left:
-    case ResizeMode::Right:
-        setCursor(Qt::SizeHorCursor);
-        break;
-    case ResizeMode::Top:
-    case ResizeMode::Bottom:
-        setCursor(Qt::SizeVerCursor);
-        break;
-    case ResizeMode::TopRight:
-    case ResizeMode::BottomLeft:
-        setCursor(Qt::SizeBDiagCursor);
-        break;
-    case ResizeMode::TopLeft:
-    case ResizeMode::BottomRight:
-        setCursor(Qt::SizeFDiagCursor);
-        break;
-    default:
-        // 无论哪种情况都设置为箭头光标
-        setCursor(Qt::ArrowCursor);
-        break;
-    }
-}
-*/
-
-// void ChatWindow::showMaximize()
-// {
-//     if (isMaximize) {
-//         showNormal();
-//         ui->maximizeButton->setIcon(QIcon(":/images/icon7.png"));
-//         ui->maximizeButton->setToolTip("最大化");
-//     } else {
-//         showMaximized();
-//         ui->maximizeButton->setIcon(QIcon(":/images/icon9.png"));
-//         ui->maximizeButton->setToolTip("还原");
-//     }
-//     isMaximize = !isMaximize;
-// }
-
-void ChatWindow::showMessage()
-{   
-
-}
-
-void ChatWindow::showContact()
-{
-    // 检查contactModel是否为空，如果是则从数据库加载数据
-    if (contactModel->rowCount() == 0) {
-        //loadContactsFromDatabase();
-    }
-    addSampleMessages(); // 添加示例消息
-    ui->contactListView->setEditTriggers(QAbstractItemView::NoEditTriggers);//不可编辑
-}
-
-void ChatWindow::refreshContacts()//刷新联系人
-{
-    // 清空现有的联系人模型和列表
-    contactModel->clearContacts();
-    contactList.clear();
-    
-    // 重新加载联系人
-    //loadContactsFromDatabase();
-    
-    // 更新UI显示
-    ui->contactListView->setModel(contactModel);
-    ui->contactListView->setItemDelegate(contactDelegate);
-}
-
-/*void ChatWindow::loadContactsFromDatabase()
-{
-    Database *db = new Database();
-    if (!db->connect("chat_connection")) {
-        delete db;
-        return;
-    }
-    
-    //使用预处理语句避免SQL注入风险，并通过JOIN一次性获取所有联系人信息
-    QSqlQuery query(db->database());
-    query.prepare(R"(
-        SELECT f.friend_note,u.user_nick,f.friend_id, u.avatar_path, u.motto ,u.email
-        FROM friendships f 
-        JOIN users u ON f.friend_id = u.user_id 
-        WHERE f.user_id = ?
-    )");
-    query.addBindValue(userInfo.userID);
-    
-    if (!query.exec()) 
-    {
-        qDebug() << "Query execution failed:" << query.lastError().text();
-        delete db;
-        return;
-    }
-    qDebug() << "好友信息: ";
-    
-    while (query.next())
-    {
-        QString friendNote = query.value(0).toString();
-        QString friendNick = query.value(1).toString();
-        QString friendID = query.value(2).toString();
-        QString avatarPath = query.value(3).toString();
-        QString message = query.value(4).toString();
-        QString email = query.value(5).toString();
-
-        //添加联系人到本地列表
-        contactList[friendID] = Friend{friendNote,friendNick, friendID,avatarPath, message,email};
-        qDebug() << "联系人信息 - 好友备注:" << friendNote << ", 头像路径:" << avatarPath << ", 信息:" << message;
-        //将联系人信息添加到联系人模型中
-        contactModel->addContact(friendNote, avatarPath,friendID);
-    }
-    delete db;
-}*/
 
 void ChatWindow::showCollect()
 {
@@ -987,124 +672,7 @@ void ChatWindow::sendMessage() // 发送消息
 
 void ChatWindow::addFriend()// 添加联系人
 {
-    /*Database *db = new Database();
-    if (!db->connect("add_friend_connection")) {
-        QMessageBox::critical(nullptr, QObject::tr("错误"), QObject::tr("数据库连接失败，无法添加好友！"));
-        delete db;
-        return;
-    }
-    QSqlDatabase database = db->database();
 
-    bool ok;
-    // 弹出输入对话框获取对方的用户ID
-    QString friendInfo = QInputDialog::getText(nullptr, 
-        QObject::tr("添加好友"), 
-        QObject::tr("请输入好友ID或昵称"), 
-        QLineEdit::Normal, 
-        QString(), 
-        &ok);
-    
-    if (!ok || friendInfo.isEmpty()) {
-        // 用户取消操作或输入为空
-        return;
-    }
-    
-    // 先尝试按昵称查找用户ID
-    QSqlQuery selectQuery(database);
-    selectQuery.prepare("SELECT user_id, user_nick FROM users WHERE user_nick = ?");
-    selectQuery.addBindValue(friendInfo);
-    
-    QString friendID = friendInfo;  // 默认认为输入的就是ID
-    QString friendNick = friendInfo; // 默认使用输入作为昵称
-    
-    if (selectQuery.exec() && selectQuery.next()) {
-        // 如果找到了对应的昵称，使用查询到的ID和昵称
-        friendID = selectQuery.value("user_id").toString();
-        friendNick = selectQuery.value("user_nick").toString();
-    }
-    
-    // 检查是否已经是好友
-    if (contactList.contains(friendID)) {
-        QMessageBox::information(nullptr, QObject::tr("提示"), QObject::tr("该用户已经是您的好友！"));
-        delete db;
-        return;
-    }
-    
-    // 检查自己不能添加自己为好友
-    if (friendID == userInfo.userID) {
-        QMessageBox::information(nullptr, QObject::tr("提示"), QObject::tr("不能添加自己为好友！"));
-        delete db;
-        return;
-    }
-
-    // 开始事务
-    database.transaction();
-    
-    try {
-        QSqlQuery query(database);
-        // 检查对方用户是否存在
-        query.prepare("SELECT COUNT(*) FROM users WHERE user_id = ?");
-        query.addBindValue(friendID);
-        if (!query.exec() || !query.next() || query.value(0).toInt() == 0) {
-            QMessageBox::information(nullptr, QObject::tr("提示"), QObject::tr("该用户不存在！"));
-            database.rollback();
-            delete db;
-            return;
-        }
-        
-        // 检查是否已经是好友（双向检查）
-        query.prepare("SELECT COUNT(*) FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)");
-        query.addBindValue(userInfo.userID);
-        query.addBindValue(friendID);
-        query.addBindValue(friendID);
-        query.addBindValue(userInfo.userID);
-        
-        if (!query.exec() || !query.next() || query.value(0).toInt() > 0) {
-            QMessageBox::information(nullptr, QObject::tr("提示"), QObject::tr("你们已经是好友了！"));
-            database.rollback();
-            delete db;
-            return;
-        }
-        
-        // 在friendships表中互相添加为好友
-        // 添加当前用户到对方的好友列表
-        query.prepare("INSERT INTO friendships (user_id, friend_id, friend_note, created_at) VALUES (?, ?, ?, NOW())");
-        query.addBindValue(friendID);           // user_id (对方)
-        query.addBindValue(userInfo.userID);    // friend_id (当前用户)
-        query.addBindValue(userInfo.userNick);  // 默认使用当前用户的昵称作为对方看到的备注
-        if (!query.exec()) {
-            throw std::runtime_error("Failed to add current user to friend's list");
-        }
-        
-        // 添加对方到当前用户的好友列表
-        query.prepare("INSERT INTO friendships (user_id, friend_id, friend_note, created_at) VALUES (?, ?, ?, NOW())");
-        query.addBindValue(userInfo.userID);    // user_id (当前用户)
-        query.addBindValue(friendID);           // friend_id (对方)
-        query.addBindValue(friendNick);         // 使用对方的昵称作为备注
-        if (!query.exec()) {
-            throw std::runtime_error("Failed to add friend to current user's list");
-        }
-        
-        // 提交事务
-        database.commit();
-        
-        QMessageBox::information(nullptr, QObject::tr("成功"), QObject::tr("好友添加成功！"));
-        
-        // 更新本地联系人列表
-        // 重新加载联系人列表以包含新增的好友
-        addSampleMessages(friendID);//添加好友后，添加示例消息
-        contactModel->clearContacts(); // 清空当前联系人
-        contactList.clear();          // 清空本地联系人缓存
-        loadContactsFromDatabase();   // 重新加载联系人
-        
-        delete db;
-    } catch (const std::exception &e) {
-        // 回滚事务
-        database.rollback();
-        QMessageBox::critical(nullptr, QObject::tr("错误"), QObject::tr("添加好友失败：%1").arg(e.what()));
-        delete db;
-        return;
-    }*/
 }
 
 void ChatWindow::onCheckContact(const QModelIndex &index) // 添加联系人到消息列表
@@ -1283,15 +851,13 @@ void ChatWindow::onMessageReceived(const networkData &data)// 处理接收消息
 void ChatWindow::linkServer()// 连接服务器
 {
     /*
-     * 初始化网络管理器并连接信号与槽函数
-     * 设置NetworkManager实例，并将以下信号连接到对应的槽函数:
-     * - messageReceived: 当收到网络消息时触发，连接到onMessageReceived槽函数
-     * - connected: 当网络连接建立时触发，连接到onNetworkConnected槽函数
-     * - disconnected: 当网络连接断开时触发，连接到onNetworkDisconnected槽函数
-     * - error: 当网络发生错误时触发，连接到onNetworkError槽函数
+    初始化网络管理器并连接信号与槽函数
+    设置NetworkManager实例，并将以下信号连接到对应的槽函数:
+    - messageReceived: 当收到网络消息时触发，连接到onMessageReceived槽函数
+    - connected: 当网络连接建立时触发，连接到onNetworkConnected槽函数
+    - disconnected: 当网络连接断开时触发，连接到onNetworkDisconnected槽函数
+    - error: 当网络发生错误时触发，连接到onNetworkError槽函数
      */
-    //m_networkManager = new NetworkManager(this);
-    //如果收到消息则调用onMessageReceived函数
     connect(m_networkManager, &NetworkManager::messageReceived,
             this, &ChatWindow::onMessageReceived);
     //连接成功时调用onNetworkConnected函数
@@ -1306,7 +872,6 @@ void ChatWindow::linkServer()// 连接服务器
     //用户状态改变时调用onUserStatusChanged函数
     connect(m_networkManager, &NetworkManager::userStatusChanged,
             this, &ChatWindow::onUserStatusChanged);
-
 }
 
 void ChatWindow::onNetworkConnected()// 处理连接成功
@@ -1317,7 +882,9 @@ void ChatWindow::onNetworkConnected()// 处理连接成功
 
 void ChatWindow::onNetworkDisconnected()// 处理断开连接
 {
-    qDebug() << "服务器已断开！";
+    qDebug() << "服务器已断开！自动重连中...";
+    // 断开连接后，5s后重新连接
+    QTimer::singleShot(5000, this, &ChatWindow::linkServer);
 }
 
 void ChatWindow::onNetworkError(const QString &error)// 处理网络错误
@@ -1337,8 +904,7 @@ void ChatWindow::onSentBtnClicked()
 void ChatWindow::onContactClicked(const QModelIndex &index)//单击联系人
 {
     ui->sideBarStack->setCurrentWidget(ui->contactPage);
-    // 更新联系人详细信息页面
-    // 获取选中的联系人信息
+    // 更新联系人详细信息页面,获取选中的联系人信息
     QString contactID = index.data(static_cast<int>(ContactRoles::IDRole)).toString();
     QString contactNick=contactList[contactID].friendNick;//昵称
     QString contactNote=contactList[contactID].friendNote;//备注

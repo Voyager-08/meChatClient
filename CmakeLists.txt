@@ -121,7 +121,7 @@ if(WIN32)
     # 1. 复制 libmysql.dll 到 bin/
     add_custom_command(TARGET meChatClient POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${LIBMYSQL_DLL_PATH}"
+            "${LIBMYSQL_DLL_PATH}" 
             "$<TARGET_FILE_DIR:meChatClient>/libmysql.dll"
         COMMENT "Copy libmysql.dll to output dir"
     )

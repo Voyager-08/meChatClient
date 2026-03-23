@@ -74,7 +74,7 @@ void MainWindow::onUserLoggedIn(const QString &userID, const QString &password)
     // 设置 ChatWindow 充满整个 stackedWidget（重要！否则会看到 MainWindow 的框架）
     chatWindow->setGeometry(0, 0, stackedWidget->width(), stackedWidget->height());
     chatWindow->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setMinimumSize(700, 600); // 设置主窗口最小尺寸，确保聊天窗口有足够空间显示
+    setMinimumSize(850, 600); // 设置主窗口最小尺寸，确保聊天窗口有足够空间显示
     setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX); // 取消最大尺寸限制，允许用户调整窗口大小
     // 连接退出登录信号
     connect(chatWindow, &ChatWindow::exitLogin, this, &MainWindow::onUserLoggedOut);

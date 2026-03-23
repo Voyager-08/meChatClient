@@ -55,6 +55,7 @@ public:
     QLabel *errorLabel; // 错误信息标签，用于显示注册过程中的错误提示
     QString originalStyleSheet; // 保存原始样式表，用于恢复样式
     // 数据
+    QString showPasswordButtonStyle; // 显示密码复选框样式
     QString userID; // 用户ID
     QString password;// 密码
     QString userNick; // 用户昵称

@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="centerMessagePage">
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -65,13 +65,13 @@
          <number>5</number>
         </property>
         <property name="leftMargin">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="topMargin">
-         <number>2</number>
+         <number>5</number>
         </property>
         <property name="rightMargin">
-         <number>0</number>
+         <number>2</number>
         </property>
         <property name="bottomMargin">
          <number>0</number>
@@ -125,13 +125,13 @@
          <number>5</number>
         </property>
         <property name="leftMargin">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="topMargin">
-         <number>2</number>
+         <number>5</number>
         </property>
         <property name="rightMargin">
-         <number>0</number>
+         <number>2</number>
         </property>
         <property name="bottomMargin">
          <number>0</number>
@@ -144,8 +144,11 @@
           <property name="topMargin">
            <number>0</number>
           </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
           <property name="bottomMargin">
-           <number>3</number>
+           <number>4</number>
           </property>
           <item>
            <widget class="QLineEdit" name="lineEdit_2"/>

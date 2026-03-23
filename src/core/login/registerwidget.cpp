@@ -153,11 +153,39 @@ void RegisterWidget::initUI()
     confirmPasswordLineEdit->setEchoMode(QLineEdit::Password);
     confirmPasswordLineEdit->setStyleSheet(lineEditStyle);
     confirmPasswordLineEdit->setGeometry(30, 260, 340, 40);
-
+    showPasswordButtonStyle =(
+    "QCheckBox {"
+    "    font: 14px 'KaiTi', '楷体';"
+    "    color: rgba(0, 0, 0, 0.8);"
+    "    spacing: 8px;"
+    "}"
+    "QCheckBox:hover {"
+    "    color:  rgba(13, 134, 255, 1);"
+    "}"
+    "QCheckBox::indicator {"
+    "    width: 14px;"
+    "    height: 14px;"
+    "    border-radius: 9px;"
+    "    border: 2px solid #ccc;"
+    "    background: white;"
+    "}"
+    "QCheckBox::indicator:hover {"
+    "    background: rgba(13, 134, 255, 0.68);"
+    "    border-color: rgba(13, 134, 255, 1);"
+    "}"
+    "QCheckBox::indicator:checked {"
+    "    border: 2px solid rgba(112, 112, 112, 1);"
+    "    image: url(:/images/icon_check.png);"
+    "}"
+    "QCheckBox::indicator:checked:hover {"
+    "    border: 2px solid rgba(112, 112, 112, 1);"
+    "    image: url(:/images/icon_check.png);"
+    "}");
     // 显示密码复选框
     showPasswordCheckBox = new QCheckBox("显示密码", container);
     showPasswordCheckBox->setGeometry(50, 305, 100, 20);
-
+    showPasswordCheckBox->setStyleSheet(showPasswordButtonStyle);
+    
     // 注册按钮
     registerButton = new QPushButton("注册", container);
     QString registerButtonStyle =

@@ -68,12 +68,6 @@ private:
 
     //界面组件
     Ui::ChatWindow *ui;
-    // bool isDragging;// 鼠标是否在拖动窗口
-    // bool isLeftButtonPressed;// 鼠标是否按下左键
-    // QPoint dragPosition;// 用于存储鼠标拖动位置
-    // ResizeMode resizeMode = ResizeMode::None;// 窗口拉伸模式
-    // int borderWidth = 5; // 增大窗口边框宽度，用于边缘检测，改善用户体验
-    // bool isMaximize = false; // 用于跟踪窗口是否最大化
     QList<QWidget*> buttonWidgets;// 存储按钮的列表
     
     //信息数据结构
@@ -92,6 +86,7 @@ private:
 
 signals:
     void exitLogin(); // 退出登录信号
+    void avatarLoaded(QPixmap pixmap);
 
 private:
     void initialUI();// 初始化UI
@@ -103,7 +98,6 @@ private:
     void connectSignals();// 连接信号槽
 
     // 窗口状态相关函数
-    // void showMaximize();//显示最大化窗口
     void showMessage();//显示消息界面
     void showContact();//显示联系人列表
     void showCollect();//显示收藏界面
@@ -122,9 +116,9 @@ private:
     void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
     void onMessageReceived(const networkData &data); // 处理接收消息
     void animatePageTransition(QWidget *widget); // 页面切换动画
-    // void loadContactsFromDatabase(); // 从数据库加载联系人
     void refreshContacts(); // 刷新联系人
     void paintRdiusPixmap(QLabel*label,const QString paintPath, int xRdius,int yRdius);// 绘制图片
+    void loadAvatar(QString userID);// 加载用户头像
 
     // 网络相关函数
     void linkServer(); // 连接服务器
@@ -141,7 +135,6 @@ protected:
     // void mouseMoveEvent(QMouseEvent *event) override;// 鼠标移动事件
     // void mouseReleaseEvent(QMouseEvent *event) override;// 鼠标释放事件
     // void leaveEvent(QEvent *event) override;// 鼠标离开事件
-
 };
 
 #endif // CHATWINDOW_H
