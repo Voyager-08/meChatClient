@@ -5,7 +5,7 @@
 #include <QPixmap>
 #include <QRect>
 #include <QFileInfo>
-#include <QDir>
+
 #include "contactmodel.h"
 #include "contactdelegate.h"
 
@@ -39,16 +39,16 @@ void ContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     QPixmap avatarPixmap;
     if (m_avatarCache.contains(avatarPath)) {
         avatarPixmap = m_avatarCache[avatarPath];
-    } 
+    }
     else {
         // 尝试直接加载图片（支持物理路径和资源路径）
         avatarPixmap = QPixmap(avatarPath);
         
         // 如果加载失败（路径为空、文件不存在或资源路径无效），则加载默认头像
         if (avatarPixmap.isNull()) {
-            avatarPixmap = QPixmap(":/images/default_avatar.png");
+            avatarPixmap = QPixmap(":/images/avatar/default.png");
         }
-        
+        qDebug() << "加载头像路径：" << avatarPath;
         // 将加载成功的图片（无论是用户头像还是默认头像）存入缓存
         m_avatarCache.insert(avatarPath, avatarPixmap);
     }

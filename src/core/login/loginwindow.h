@@ -15,14 +15,6 @@ QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 class ChatWindow;// 前向声明聊天窗口类
 
-struct UserInfo//用户ID, 昵称, 密码, 头像路径
-{
-    QString userID;
-    QString userName;
-    QString userPassword;
-    QString userAvatar;
-};
-
 class NetworkManager;
 class RegisterWidget;
 class LoginWindow : public QWidget
@@ -39,7 +31,7 @@ private:
 //鼠标对象
     QMouseEvent* mouseEvent;
 // 网络管理器
-    NetworkManager *m_networkManager; 
+    NetworkManager *networkManager; 
 // UI 组件
     QStackedWidget*stackedWidget;// 用于切换登录和注册界面
     QWidget*loginWidget; // 主登录窗口组件
@@ -77,13 +69,13 @@ private slots:
     void loginChatwindow(const QString userID);// 登录成功后打开聊天窗口
 //类函数
 private:
-    void linkServer();// 连接服务器
     void initUI();// 初始化界面
     void setBackground();// 设置背景
-    void signalConnect();// 信号槽连接
+    void connectUISignals();// 信号槽连接
     void registerSuccess();// 注册成功
 protected:
     bool eventFilter(QObject *obj, QEvent *event)override;// 事件过滤器重写
+    void mousePressEvent(QMouseEvent *event)override;// 鼠标按下事件
 };
 
 #endif // LoginWindow_H

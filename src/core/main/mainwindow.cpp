@@ -1,24 +1,34 @@
-#include "mainwindow.h"
-#include "src/core/login/loginwindow.h"
-#include "src/core/chat/chatwindow.h"
-#include "src/network/networkmanager.h"
 #include <QDebug>
 #include <QVBoxLayout>
 #include <QIcon>
+#include <QTimer>
+#include <QThread>
+
+#include "mainwindow.h"
+#include "src/core/login/loginwindow.h"
+#include "src/core/chat/chatwindow.h"
+#include "src/thread/network/networkmanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),
       loginWindow(nullptr),
       chatWindow(nullptr),
-      networkManager(nullptr)
+      networkManager(nullptr),
+      networkThread(nullptr)
 {
     initializeUI();
     connectSignals();
+    linkServer();
 }
 
 MainWindow::~MainWindow()
 {
-    // 析构函数会自动清理所有子对象
+    if (networkThread) {
+        networkThread->quit();
+        networkThread->wait();
+        delete networkThread;
+        networkThread = nullptr;
+    }
 }
 
 void MainWindow::initializeUI()
@@ -39,8 +49,13 @@ void MainWindow::initializeUI()
     layout->addWidget(stackedWidget);
     setLayout(layout);
     
-    // 创建全局网络管理器
-    networkManager = new NetworkManager(this);
+    // 创建网络线程
+    networkThread = new QThread(this);
+    networkManager = new NetworkManager();
+    networkManager->moveToThread(networkThread);
+    
+    // 启动网络线程
+    networkThread->start();
     
     // 创建登录窗口
     loginWindow = new LoginWindow(this, networkManager);
@@ -56,6 +71,18 @@ void MainWindow::connectSignals()
     // 连接登录窗口的登录成功信号
     connect(loginWindow, &LoginWindow::userLoggedIn, this, &MainWindow::onUserLoggedIn);
 }
+
+void MainWindow::linkServer()
+{
+    if(networkManager->isConnected())
+    {
+        qDebug() << "已连接到服务器";
+        return;
+    }
+    // 使用队列连接确保在网络线程中执行
+    QMetaObject::invokeMethod(networkManager, &NetworkManager::connectToServer, Qt::QueuedConnection);
+}
+
 
 void MainWindow::onUserLoggedIn(const QString &userID, const QString &password)
 {

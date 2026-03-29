@@ -2,7 +2,7 @@
 #include "contactmodel.h"
 #include <QPixmap>
 #include <QFile>
-#include <QDebug>  
+#include <QDebug> 
 
 
 ContactModel::ContactModel(QObject *parent)// 显示构造函数，必须传父对象指针

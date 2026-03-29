@@ -6,25 +6,7 @@
 #include <QList>
 #include <QString>
 #include <QDateTime>
-
-struct Model_Message ;
-enum class MessageRoles ;
-
-struct Model_Message {//备注、头像路径、消息内容、时间、ID
-    QString note;//备注
-    QString avatarPath;//头像路径
-    QString message; //消息
-    QDateTime time; //时间
-    QString senderID; //发送者ID
-};
-
-enum class MessageRoles {
-    NoteRole = Qt::UserRole + 1,      // 备注
-    AvatarPathRole = Qt::UserRole + 2, // 头像路径（字符串）
-    MessageRole = Qt::UserRole + 3,  // 消息
-    TimeRole = Qt::UserRole + 4,     // 时间
-    SenderIDRole = Qt::UserRole + 5  // 发送者ID
-};
+#include "src/custom/struct.h"
 
 class MessageModel : public QAbstractListModel
 {
@@ -38,6 +20,7 @@ public:
 public:
     void addMessage(const Model_Message &message);//添加消息
     void addMessage(const QString &name, const QString &avatarPath, const QString &message, const QDateTime &time, const QString &ID);//添加消息重载
+    void updateMessage(const QString &senderID, const QString &message, const QDateTime &time);//更新消息
     void clearMessages();//清空消息列表
 
 private:

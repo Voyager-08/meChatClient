@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QDir>
+
 #include <QFontDatabase>
 #include <QLinearGradient>
 #include <QPainterPath>
@@ -16,7 +17,7 @@ MessageDelegate::MessageDelegate(QObject *parent)
     qDebug() << "MessageDelegate 专业版初始化成功";
 }
 
-QPixmap MessageDelegate::getDefaultAvatar(int size) const
+/*QPixmap MessageDelegate::getDefaultAvatar(int size) const
 {
     QPixmap pixmap(size, size);
     pixmap.fill(Qt::transparent);
@@ -36,7 +37,7 @@ QPixmap MessageDelegate::getDefaultAvatar(int size) const
     
     p.end();
     return pixmap;
-}
+}*/
 
 void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                             const QModelIndex &index) const
@@ -78,13 +79,25 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
         if (m_pixmapCache.contains(avatarPath)) {
             pixmap = *m_pixmapCache.object(avatarPath);
         } else if (QFile::exists(avatarPath)) {
-            pixmap = QPixmap(avatarPath).scaled(avatarSize, avatarSize,
-                                                Qt::KeepAspectRatio,
-                                                Qt::SmoothTransformation);
-            m_pixmapCache.insert(avatarPath, new QPixmap(pixmap));
+            QPixmap tempPixmap(avatarPath);
+            if (!tempPixmap.isNull()) {
+                pixmap = tempPixmap.scaled(avatarSize, avatarSize,
+                                            Qt::KeepAspectRatio,
+                                            Qt::SmoothTransformation);
+                m_pixmapCache.insert(avatarPath, new QPixmap(pixmap));
+            }
         }
     }
-    if (pixmap.isNull()) pixmap = getDefaultAvatar(avatarSize);
+    if (pixmap.isNull()) 
+    {
+        qDebug() << "头像路径为空，使用默认头像";
+        QPixmap tempPixmap(QDir::currentPath() + "/images/avatar/default.png");
+        if (!tempPixmap.isNull()) {
+            pixmap = tempPixmap.scaled(avatarSize, avatarSize,
+                                                Qt::KeepAspectRatio,
+                                                Qt::SmoothTransformation);
+        }
+    }
 
     // 5. 绘制头像
     QRect avatarRect(option.rect.left() + spacing, 
@@ -92,16 +105,16 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
                      avatarSize, avatarSize);
     
     // 创建圆角矩形头像（只创建一次）
-    QPixmap avatarPixmap(50, 50);
+    QPixmap avatarPixmap(avatarSize, avatarSize);
     avatarPixmap.fill(Qt::transparent);
     QPainter avatarPainter(&avatarPixmap);
     avatarPainter.setRenderHint(QPainter::Antialiasing);
     
     QPainterPath path;
-    path.addRoundedRect(0, 0, 50, 50, 8, 8);//创建圆角矩形
+    path.addRoundedRect(0, 0, avatarSize, avatarSize, 8, 8);//创建圆角矩形
     
     avatarPainter.setClipPath(path);
-    avatarPainter.drawPixmap(0, 0, pixmap.scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    avatarPainter.drawPixmap(0, 0, pixmap.scaled(avatarSize, avatarSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
 
     // 绘制头像
     painter->drawPixmap(avatarRect, avatarPixmap);

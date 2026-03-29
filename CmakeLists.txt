@@ -55,8 +55,11 @@ add_executable(meChatClient
     src/core/extra/messagebubble.h
     src/sql/database.h
     src/sql/database.cpp
-    src/network/networkmanager.cpp
-    src/network/networkmanager.h
+    src/thread/network/networkmanager.cpp
+    src/thread/network/networkmanager.h
+    src/thread/dataLoad/dataloader.cpp
+    src/thread/dataLoad/dataloader.h
+    src/custom/struct.h
     src/custom/meplaintextedit.cpp
     src/custom/meplaintextedit.h
     src/custom/clickablelabel.cpp
@@ -145,6 +148,12 @@ if(WIN32)
             "${QT_PLUGIN_DIR}/qsqlmysqld.dll"
             "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlmysqld.dll"
         COMMENT "Copy Qt MySQL driver (Debug)"
+    )
+    add_custom_command(TARGET meChatClient POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT_PLUGIN_DIR}/qsqlite.dll"
+            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlite.dll"
+        COMMENT "Copy Qt SQLite driver"
     )
 
     # 4. 复制平台插件

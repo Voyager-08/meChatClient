@@ -4,7 +4,6 @@
 #include <QFile>
 #include <QDebug>  
 
-
 MessageModel::MessageModel(QObject *parent)// 显示构造函数，必须传父对象指针
     : QAbstractListModel(parent)// 调用父类构造函数
 {
@@ -66,6 +65,19 @@ void MessageModel::addMessage(const QString &note, const QString &avatarPath, co
     beginInsertRows(QModelIndex(), rowCount(), rowCount()); //  通知视图即将插入新行
     m_messages.append(newMessage); //  将新的消息添加到消息列表末尾
     endInsertRows(); //  通知视图插入行操作完成
+}
+
+void MessageModel::updateMessage(const QString &senderID, const QString &message, const QDateTime &time)
+{
+    for (int i = 0; i < m_messages.size(); ++i) {
+        if (m_messages[i].senderID == senderID) {
+            m_messages[i].message = message;
+            m_messages[i].time = time;
+            QModelIndex index = createIndex(i, 0);
+            emit dataChanged(index, index);
+            break;
+        }
+    }
 }
 
 void MessageModel::clearMessages()

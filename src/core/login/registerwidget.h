@@ -24,16 +24,16 @@ signals:
 public slots :
     bool onRegisterClicked();// 注册按钮点击
     void onPasswordChanged(const QString &text);// 密码框内容改变
-    void onSelectAvatar();// 选择头像
+    void onSelectAvatar();// 选择头像   
 
 private:
     void initUI();
     void setBackground(); // 添加背景设置函数
-    void signalConnection();// 信号连接
+    void connectUISignals();// 信号连接
     bool validateInput();// 验证输入
     void showError(const QString &message);// 显示错误信息
     void clearErrors();// 清除错误信息
-    void highlightError(QLineEdit *lineEdit);//错误输入框高亮
+    void lineEditHighlight(QLineEdit *lineEdit);//错误输入框高亮
     void flashErrorLabel(QLabel* label, int loopCount = 2, int durationPerLoop = 500);// 错误信息显示闪动
 
 protected:

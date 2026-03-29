@@ -11,28 +11,21 @@
 #include <QEasingCurve>             // 用于动画缓动曲线
 #include <QTransform>               // 用于图形变换
 #include <QFile>
+#include <QDir>
 
 #include "loginwindow.h"
 #include "registerwidget.h"
-#include "src/network/networkmanager.h"
+#include "src/thread/network/networkmanager.h"
 
 LoginWindow::LoginWindow(QWidget *parent, NetworkManager *networkManager)
-    : QWidget(parent),m_networkManager(networkManager)
+    : QWidget(parent),networkManager(networkManager)
 {
     initUI();// 初始化界面
     setBackground();// 设置背景
-    signalConnect();// 信号槽连接
+    connectUISignals();// 信号槽连接
     showAvatar();// 显示头像
-    linkServer();// 连接服务器
 }
 
-void LoginWindow::linkServer()// 连接服务器
-{
-    m_networkManager->connectToServer("8.129.134.106", 6452);// 连接到服务器
-    connect(m_networkManager, &NetworkManager::connected, this, [=](){
-        qDebug() << "成功连接到服务器！";
-    });
-}
 
 void LoginWindow::initUI()
 {    // 设置窗口标题
@@ -42,7 +35,7 @@ void LoginWindow::initUI()
     setWindowIcon(QIcon(":/images/10.png"));
 
     loginWidget=new QWidget(this);// 主登录窗口组件
-    registerWidget=new RegisterWidget(this,m_networkManager);// 主注册窗口组件
+    registerWidget=new RegisterWidget(this,networkManager);// 主注册窗口组件
     stackedWidget=new QStackedWidget(this);// 用于切换登录和注册界面
     stackedWidget->addWidget(loginWidget);
     stackedWidget->addWidget(registerWidget);
@@ -201,9 +194,10 @@ void LoginWindow::initUI()
     "color: rgba(255, 255, 255, 1);"
     "}"
     "QPushButton:pressed {"
+    "background-color: rgba(33, 149, 243, 1);"
+    "padding: 2px;"
     "padding-top: 8px;  /* 微下沉效果 */"
     "padding-bottom: 4px;"
-    "background-color: rgba(255, 238, 0, 0.45);"
     "}");
     loginButton->setGraphicsEffect(shadowEf_login);// 将阴影效果应用到按钮
     loginButton->setAutoDefault(true); // 设置为默认按钮
@@ -260,28 +254,30 @@ void LoginWindow::setBackground()
 
 bool LoginWindow::login()//登录功能
 {
+    // 使用队列连接确保在网络线程中执行
+    QMetaObject::invokeMethod(networkManager, &NetworkManager::connectToServer, Qt::QueuedConnection);
+    // 检查输入框
     if(resetLineEdit==1) return false;// 如果是重置输入框状态，则不执行登录操作
-    //点击登录就需要记住输入
+    //点击登录就需要记住输入的账号和密码
     savedUserID = userIDLineEdit->text();
     savedPassword = passwordLineEdit->text();
-    qDebug() << "用户ID：" << savedUserID << "密码：" << savedPassword;
+    qDebug() << "用户ID:" << savedUserID << "密码:" << savedPassword;
     if(checkInputFields()) return false;// 检查输入框
-    // 在这里添加验证用户名和密码的逻辑
-    QJsonObject loginObj;
-    loginObj["type"] = "login";
-    loginObj["userId"] = savedUserID;
-    loginObj["password"] = savedPassword;
+    if(!networkManager->isConnected()) // 检查是否已连接到服务器
+    {
+        loginError("服务器连接失败!");
+        return false;// 如果未连接，则不执行登录操作
+    }
 
-    QJsonDocument doc(loginObj);
-    QByteArray jsonData = doc.toJson(QJsonDocument::Compact) + "\n"; // 必须加 \n！
     // 先断开旧的连接，再建立新的连接，确保不重复
-    disconnect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
-    disconnect(m_networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
-    connect(m_networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
-    connect(m_networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
-
-    m_networkManager->sendRawData(jsonData);// 发送登录请求
-
+    disconnect(networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
+    disconnect(networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
+    connect(networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow, Qt::QueuedConnection);
+    connect(networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError, Qt::QueuedConnection);
+    // 使用队列连接确保在网络线程中执行
+    QMetaObject::invokeMethod(networkManager, "sendLoginRequest", Qt::QueuedConnection,
+                              Q_ARG(QString, savedUserID),
+                              Q_ARG(QString, savedPassword));  
     return false;
 }
 
@@ -290,8 +286,11 @@ void LoginWindow::loginError(const QString &errorString)
     resetLineEdit=1;// 设置重置输入框标志
     qDebug() << "登录失败:" << errorString;
     // 清空输入框以显示错误提示
+    disconnect(userIDLineEdit, &QLineEdit::textChanged, this, &LoginWindow::showAvatar);
     userIDLineEdit->clear();
     passwordLineEdit->clear();
+    //这里阻止plainTextEdit发送文本框内容改变信号
+    connect(userIDLineEdit, &QLineEdit::textChanged, this, &LoginWindow::showAvatar);
     // 在账号输入框中显示错误提示
     userIDLineEdit->setPlaceholderText(errorString);
     userIDLineEdit->setStyleSheet("QLineEdit {"
@@ -316,7 +315,7 @@ void LoginWindow::loginError(const QString &errorString)
     showPasswordButton->setEnabled(false);
 }
 
-void LoginWindow::signalConnect()// 信号槽连接
+void LoginWindow::connectUISignals()// 信号槽连接
 {
     connect(registerWidget->backButton, &QPushButton::clicked, this, &LoginWindow::switchToLogin);
     connect(registerWidget, &RegisterWidget::registrationSucceeded,this, &LoginWindow::registerSuccess);
@@ -361,6 +360,16 @@ bool LoginWindow::eventFilter(QObject *obj, QEvent *event)
     // 其他事件交给父类处理
     return QWidget::eventFilter(obj, event);
     // 如果返回 true，则表示事件已处理，不再传递给父类
+}
+
+void LoginWindow::mousePressEvent(QMouseEvent *event)
+{
+    // 当点击窗口任意位置时，如果有错误状态则重置
+    if (resetLineEdit == 1) {
+        resetLineEditStyle(userIDLineEdit);
+    }
+    // 调用父类的鼠标按下事件处理
+    QWidget::mousePressEvent(event);
 }
 
 void LoginWindow::resetLineEditStyle(QLineEdit *lineEdit )// 重置输入框样式
@@ -425,7 +434,7 @@ void LoginWindow::showAvatar()
     QPixmap pixmap;
     
     // 从同目录images/avatar/中查找头像路径
-    avatarPath = "./images/avatar/" + userID + ".png";
+    avatarPath = QDir::currentPath() + "/images/avatar/" + userID + ".png";
     
     if (QFile::exists(avatarPath))
     {
@@ -433,12 +442,12 @@ void LoginWindow::showAvatar()
          qDebug() << ".\n头像加载成功!";
          qDebug() << "头像路径:" << avatarPath;
     }
-    else
-    {
-        qDebug() << ".\n头像加载失败，文件不存在或加载时错误!";
-        qDebug() << "头像路径:" << avatarPath;
-        pixmap = QPixmap(":/images/avatar/default.png");
-    }
+     else
+     {
+         qDebug() << ".\n头像加载失败,文件不存在或使用了默认头像!";
+         qDebug() << "头像路径:" << avatarPath;
+         pixmap = QPixmap(":/images/avatar/default.png");
+     }
 
     // 创建圆角头像
     QPixmap roundedAvatar(80, 80);
@@ -539,7 +548,7 @@ void LoginWindow::switchToLogin()//切换到登录界面
 
 void LoginWindow::loginChatwindow(const QString userID)
 {
-    qDebug() << "登录成功，用户ID：" << userID;
+    qDebug() << "登录成功，用户ID:" << userID;
     // 发送登录成功信号给主窗口，主窗口负责创建 ChatWindow 和页面切换
     emit userLoggedIn(userID, savedPassword);
 }

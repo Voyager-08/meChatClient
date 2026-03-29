@@ -5,21 +5,7 @@
 #include <QAbstractListModel>
 #include <QList>
 #include <QString>
-
-struct Contact ;
-enum class ContactRoles ;
-
-struct Model_Contact {//昵称、头像路径、签名
-    QString name;
-    QString avatarPath;
-    QString id;
-};
-
-enum class ContactRoles {
-    NameRole = Qt::UserRole + 1,      // 名字
-    AvatarPathRole = Qt::UserRole + 2, // 头像路径（字符串）
-    IDRole = Qt::UserRole + 3   // 联系人ID
-};
+#include "src/custom/struct.h"
 
 class ContactModel : public QAbstractListModel
 {

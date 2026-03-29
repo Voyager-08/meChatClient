@@ -5,15 +5,8 @@
 #include <QTcpSocket>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QHostAddress>
-
-struct networkData /** * @brief 网络数据结构体，用于存储网络通信中的相关信息 */
-{
-    QString senderId; // /< 发送方ID，标识消息的发送者
-    QString receiverId; // /< 接收方ID，标识消息的接收者
-    QString content; // /< 消息内容，实际传输的数据
-    QDateTime timestamp; // /< 时间戳，记录消息发送或接收的时间
-};
+#include <QHostAddress>// 主机地址类
+#include "src/custom/struct.h"
 
 class NetworkManager : public QObject
 {
@@ -25,19 +18,18 @@ public:
  * @param parent 父对象指针，默认为nullptr
  */
     explicit NetworkManager(QObject *parent = nullptr);
-/**
- * @brief 连接到指定主机和端口的服务器
- * @param host 服务器主机地址
- * @param port 服务器端口号
- */
-    void connectToServer(const QString &host, quint16 port);
-    void sendMessage(const networkData &data); // 发送消息结构体
-    void sendRawData(const QByteArray &data); // 发送原始数据
     bool isConnected() const { return m_socket && m_socket->state() == QTcpSocket::ConnectedState; }// 检查是否已连接到服务器
+
+public slots:
+    void connectToServer();// 连接到服务器
+    void sendHeartbeatMessage(const QString &userId); // 发送心跳消息
+    void sendMessage(const MeChat::messageData &data); // 发送消息结构体
+    void sendLoginRequest(const QString &userId, const QString &password); // 登录请求
+    void requestUserInfo(const QString &userId); // 请求用户信息
+    void sendFriendRequest(const QString &userId); // 发送好友请求
     void registerUser(const QString &userId, const QString &userNick, const QString &password); // 注册用户
 
 signals:
-    void messageReceived(const networkData &data);
     void connected();
     void disconnected();
     void error(const QString &errorString);
@@ -46,10 +38,17 @@ signals:
     void loginFailed(const QString &errorString); // 登录失败信号，携带错误信息
     void registerSuccess(const QString &userId); // 注册成功信号，携带用户ID
     void registerFailed(const QString &errorString); // 注册失败信号，携带错误信息
+    void receiveUserInfo(MeChat::UserInfo *userInfo);// 接收用户信息
+    void receiveMessage(const MeChat::messageData &data);// 接收消息结构体
+    void receiveFriendInfo(const MeChat::FriendInfo &friendInfo);// 接收好友信息
 
 private slots:
-    void onReadyRead();
-    void onError();
+    void onReadyRead(); // 处理可读数据
+    void onDisconnected();//处理断开连接
+    void onError(); // 处理网络错误
+    void sendRawData(const QJsonObject &data); // 发送原始数据
+    void onConnected(); // 处理连接成功
+
 
 private:
     QTcpSocket *m_socket;//用于客户端网络通信的TCP套接字

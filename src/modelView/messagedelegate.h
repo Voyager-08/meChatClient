@@ -26,7 +26,7 @@ signals:
 
 private:
     mutable QCache<QString, QPixmap> m_pixmapCache; // 缓存已加载的头像
-    QPixmap getDefaultAvatar(int size) const;
+    /*QPixmap getDefaultAvatar(int size) const;*/
 
     int m_hoveredRow;//鼠标悬停的行
     int m_checkedRow;//选中的行

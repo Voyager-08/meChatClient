@@ -17,13 +17,13 @@
 
 #include "registerwidget.h"
 #include "src/custom/clickablelabel.h"
-#include "src/network/networkmanager.h"
+#include "src/thread/network/networkmanager.h"
 
 RegisterWidget::RegisterWidget(QWidget *parent, NetworkManager *networkManager)
     : QWidget(parent), networkManager(networkManager)
 {
     initUI();
-    signalConnection();
+    connectUISignals();
 }
 
 RegisterWidget::~RegisterWidget()
@@ -99,16 +99,16 @@ void RegisterWidget::initUI()
         "QLineEdit {"
         "height: 40px;"
         "padding: 0 15px 0 35px;"
-        "border: 1px solid rgba(255, 255, 255, 40%);"
-        "border-radius: 20px;"
-        "background-color: rgba(255, 255, 255, 10%);"
+        "border: 2px solid rgba(255, 255, 255, 0.4);"
+        "border-radius: 10px;"
+        "background-color: rgba(255, 255, 255, 0.1);"
         "color: #000000;"
         "font-family: 'Kaiti';"
-        "font-size: 14px;"
+        "font-size: 17px;"
         "}"
         "QLineEdit:focus {"
-        "border: 1px solid #2196F3;"
-        "background-color: rgba(255, 255, 255, 20%);"
+        "border: 2px solid rgba(255, 255, 255, 0.8);"
+        "background-color: rgba(255, 255, 255, 0.2);"
         "}";
     originalStyleSheet=lineEditStyle;
     userIDLineEdit->setStyleSheet(lineEditStyle);
@@ -242,17 +242,16 @@ void RegisterWidget::initUI()
     shadow->setOffset(0, 5);//偏移
     backButton->setGraphicsEffect(shadow);
     
-
     // 错误提示标签
     errorLabel = new QLabel(container);
-    QString errorLabelStyle ="QLabel { "
+    QString errorLabelStyle ="QLabel {"
     "color: rgba(255, 0, 0, 0.58); "
     "font-family: 'KaiTi', 'SimKai'; "
     "font-size: 14px; "
     "font-weight: bold;"
      "}";
     errorLabel->setStyleSheet(errorLabelStyle);
-    errorLabel->setGeometry(35, 325, 340, 20);
+    errorLabel->setGeometry(230, 305, 340, 20);
     errorLabel->hide();
 }
 
@@ -276,7 +275,7 @@ void RegisterWidget::setBackground()
     setAutoFillBackground(true);
 }
 
-void RegisterWidget::signalConnection()
+void RegisterWidget::connectUISignals()
 {
     connect(registerButton, &QPushButton::clicked, this, &RegisterWidget::onRegisterClicked);
     connect(showPasswordCheckBox, &QCheckBox::toggled, this, [=](bool checked) {
@@ -323,6 +322,8 @@ bool RegisterWidget::onRegisterClicked()
     {
         return false;
     }
+    // 使用队列连接确保在网络线程中执行
+    QMetaObject::invokeMethod(networkManager, &NetworkManager::connectToServer, Qt::QueuedConnection);
     if(!networkManager->isConnected())// 检查网络连接状态
     {
         showError("服务器连接失败！");// 显示错误信息
@@ -378,17 +379,16 @@ bool RegisterWidget::onRegisterClicked()
         qDebug()<<"注册成功！";
         isSuccess = true;
         delaySuccTimer.start(2000); // 让注册中显示2000毫秒
-    });
+    }, Qt::QueuedConnection);
     // 注册失败信号，触发注册失败定时器，让注册中显示2000毫秒
     connect(networkManager, &NetworkManager::registerFailed, &registerDialog, [&](QString errorString) {
         timer.stop();// 停止定时器
         registerDialog.close();// 关闭对话框
         qDebug()<<"注册失败!"<<errorString;// 显示注册失败信息
         showError(errorString);// 显示错误信息
-        return false;
         isSuccess = false;
         delayFailTimer.start(2000); // 让注册中显示2000毫秒
-    });
+    }, Qt::QueuedConnection);
     
     // 注册成功定时器信号，显示注册成功结果1s后关闭对话框
     connect(&delaySuccTimer, &QTimer::timeout, &registerDialog, [&]() {
@@ -409,8 +409,11 @@ bool RegisterWidget::onRegisterClicked()
         registerDialog.close();// 关闭对话框
     });
 
-    // 调用网络管理器注册用户
-    networkManager->registerUser(userID, userNick, password);// 注册用户，传递用户ID、昵称、密码
+    // 调用网络管理器注册用户,用信号槽传入参数到networkmanager
+    QMetaObject::invokeMethod(networkManager, "registerUser",  Qt::QueuedConnection,
+                              Q_ARG(QString, userID),
+                              Q_ARG(QString, userNick),
+                              Q_ARG(QString, password));// 注册用户，传递用户ID、昵称、密码
     registerDialog.exec();// 显示对话框，等待用户操作
     if(!isSuccess)return false;
     
@@ -451,8 +454,8 @@ void RegisterWidget::onSelectAvatar()
         {
             // 将图片缩放为80x80大小，保持宽高比，并使用平滑变换
             QPixmap scaledPixmap = pixmap.scaled(80, 80, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            //保存用户头像到本地文件images/avatar/userID.png
-            QString savePath = QString("images/avatar/%1.png").arg(userID);
+            // 保存用户头像到本地文件images/avatar/userID.png
+            QString savePath = QDir::currentPath() + QString("/images/avatar/%1.png").arg(userID);
             scaledPixmap.save(savePath);
             // 设置按钮的图标为缩放后的图片
             avatarButton->setIcon(QIcon(scaledPixmap));
@@ -477,14 +480,14 @@ bool RegisterWidget::validateInput()// 验证输入
     if (userID.isEmpty()) {
         showError("用户ID不能为空!");
         userIDLineEdit->setFocus();// 设置焦点
-        highlightError(userIDLineEdit);
+        lineEditHighlight(userIDLineEdit);
         return false;
     }
 
     if (userNick.isEmpty()) {
         showError("用户昵称不能为空!");
         userNickLineEdit->setFocus();// 设置焦点
-        highlightError(userNickLineEdit);
+        lineEditHighlight(userNickLineEdit);   
         return false;
     }
 
@@ -493,36 +496,35 @@ bool RegisterWidget::validateInput()// 验证输入
     if (userID.contains(re)) {
         showError("用户ID只能是数字!");
         userIDLineEdit->setFocus();
-        highlightError(userIDLineEdit);
+        lineEditHighlight(userIDLineEdit);
         return false;
     }
     
     if (password.isEmpty()) {
         showError("密码不能为空!");
         passwordLineEdit->setFocus();
-        highlightError(passwordLineEdit);
+        lineEditHighlight(passwordLineEdit);
         return false;
     }
 
     if (confirmPassword.isEmpty()) {
         showError("请确认密码!");
         confirmPasswordLineEdit->setFocus();
-        highlightError(confirmPasswordLineEdit);
+        lineEditHighlight(confirmPasswordLineEdit);
         return false;
     }
 
     if (password != confirmPassword) {
         showError("两次输入的密码不一致!");
-        highlightError(passwordLineEdit);
-        highlightError(confirmPasswordLineEdit);
+        lineEditHighlight(passwordLineEdit);
+        lineEditHighlight(confirmPasswordLineEdit);
         return false;
     }
 
     if (password.length() < 6) {
         showError("密码长度不能少于6位!");
         passwordLineEdit->setFocus();
-        passwordLineEdit->selectAll();
-        highlightError(passwordLineEdit);
+        lineEditHighlight(passwordLineEdit);
         return false;
     }
 
@@ -544,22 +546,22 @@ void RegisterWidget::clearErrors()
     errorLabel->setFixedHeight(20);// 设置错误信息高度
 }
 
-void RegisterWidget::highlightError(QLineEdit* lineEdit) {
+void RegisterWidget::lineEditHighlight(QLineEdit* lineEdit) {
     // 保存原始调色板
     QString errorStyleSheet =
     "QLineEdit {"
     "height: 40px;"
     "padding: 0 15px 0 35px;"
-    "border: 1px solid rgba(255, 255, 255, 40%);"
-    "border-radius: 20px;"
-    "background-color: rgba(255, 255, 255, 10%);"
+    "border: 2px solid rgba(255, 14, 14, 0.66);"
+    "border-radius: 10px;"
+    "background-color: rgba(255, 255, 255, 0.1);"
     "color: white;"
     "font-family: 'Kaiti';"
-    "font-size: 14px;"
+    "font-size: 17px;"
     "}"
     "QLineEdit:focus {"
-    "border: 1px solid rgba(243, 33, 33, 1);"
-    "background-color: rgba(255, 255, 255, 20%);"
+    "border: 2px solid rgba(243, 33, 33, 1);"
+    "background-color: rgba(255, 255, 255, 0.2);"
     "}";
 
     int flashCount = 0;

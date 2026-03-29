@@ -3,24 +3,54 @@
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QDebug>
+#include <QString>
 #include <QSqlError>
+#include <QUuid>
+#include <QList>
+#include <QDebug>
+#include <QDateTime>
+#include "src/custom/struct.h"
 
-class MainWindow;//前向声明
+using namespace MeChat;
 
 class Database
 {
 public:
+    Database();
     ~Database();
-    QSqlDatabase database() const { return db; }// 获取数据库连接
 
-    bool connect(QString connectDbName);
+    QSqlDatabase database() const { return db; }
+    void connect(const QString &dbName);
     void close();
-    QString ConnectionName();// 数据库连接名称
+    QString connectionName() const;
+    bool isOpen() const { return db.isOpen(); }
+
+    // 用户相关操作
+    bool saveUserInfo(const UserInfo &userInfo);
+    UserInfo getUserInfo(const QString &userId);
+    bool userExists(const QString &userId);
+
+    // 好友相关操作
+    bool saveFriendship(const QString &userId, const FriendInfo &friendInfo);
+    QList<FriendInfo> getFriendList(const QString &userId);
+    bool deleteFriendship(const QString &userId, const QString &friendId);
+
+    // 消息相关操作
+    bool saveMessage(const messageData &message);
+    QList<messageData> getMessages(const QString &userId, const QString &friendId);
+    bool markMessageAsRead(const QString &messageId);
+
+    // 初始化数据库（创建表）
+    bool init();
 
 private:
     QSqlDatabase db;
-    QString connectionName; // 数据库连接名称
+    QString dbPath;
+    QString m_connectionName;
+
+    bool openDatabase();
+    void closeDatabase();
+    bool createTables();
 };
 
 #endif // DATABASE_H
