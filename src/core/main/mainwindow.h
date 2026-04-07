@@ -29,6 +29,7 @@ private:
     void initializeUI();     // 初始化UI
     void connectSignals();   // 连接信号槽
     void linkServer();// 连接服务器
+    void setWindowStyle();// 设置窗口样式
 
 private:
     QStackedWidget *stackedWidget;  // 用于页面切换的栈式窗口

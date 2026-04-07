@@ -14,6 +14,7 @@
 namespace Ui {class ChatWindow;}
 class MessageModel;
 class ContactModel;
+class AddContactModel;
 class ContactDelegate;
 class MessageDelegate;
 class ContactMessageBubble;
@@ -37,8 +38,6 @@ enum class ResizeMode { // 窗口拉伸模式枚举
     BottomRight  //  右下方向
 };
 
-
-
 class ChatWindow : public QWidget
 {
     Q_OBJECT
@@ -56,12 +55,13 @@ private:
     MeChat::UserInfo *userInfo; // 当前用户信息
     QString receiverID; // 当前消息接收者ID
     ContactModel *contactModel;// 联系人模型
+    AddContactModel *addContactModel;// 添加联系人模型
     MessageModel *messageModel;// 消息模型
     ContactDelegate *contactDelegate; // 联系人委托
     MessageDelegate *messageDelegate; // 消息委托
     QHash<QString, QList<Message>> messageDataMap; // 存储消息数据映射
     QHash<QString, MeChat::FriendInfo> contactList; // 存储联系人
-    QHash<QString, bool> contactSelected; // 存储联系人是否被选中
+    QHash<QString, bool> contact_addMessage; // 存储联系人是否已被添加消息
 
     //网络
     NetworkManager *networkManager; // 网络管理器
@@ -69,8 +69,10 @@ private:
     DataLoader *dataLoader;          // 数据加载器
 
 signals:
-    void exitLogin(); // 退出登录信号
+    void exitLogin(QString userID); // 退出登录信号
     void avatarLoaded(QPixmap pixmap);
+    void addFriendId(const QString &friendId);
+    void searchAddFriendStr(const QString &friendStr);
 private slots:
     // DataLoader 信号槽
     void onUserInfoLoaded(const MeChat::UserInfo &userInfo);
@@ -82,29 +84,31 @@ private:
     void initialStackWideget();// 初始化堆栈窗口
     void initialModelView();// 初始化模型视图
     void initialUserInfo(QString userID);// 初始化用户信息
-    QString toStringSex(MeChat::Sex s) ;// 将性别枚举转换为字符串
-    bool isNonDraggableWidget(QWidget* w);
     void connectUISignals();// 连接信号槽
 
     // 窗口状态相关函数
-    void showMessageList(const MeChat::messageData& message);//显示消息界面
+    void animatePageTransition(QWidget *widget); // 页面切换动画
+    void addSampleBubbleMessages(); // 添加示例消息
+    void addSampleBubbleMessages(QString friendID);//添加示例消息
+    void addFriend(); // 添加联系人
+
+    void createNote();// 创建笔记
+    void clickMessageList(const QModelIndex &index); // 点击消息列表
+    void clickSentBtn();//发送按钮点击
+    void clickContactList(const QModelIndex &index); // 单击联系人列表
+    void clickDoubleContactList(const QModelIndex &index); // 双击联系人列表
+    void clickContactList_to_MessageList(const QModelIndex &index); // 联系人列表添加到消息列表
+
+    void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
+    void onMessageReceived(const MeChat::messageData &data); // 处理接收消息
+
+    void sendMessage(); // 发送消息
     void showContactList(const MeChat::FriendInfo& friendInfo);//显示联系人列表
     void showCollect();//显示收藏界面
     void showMoments();//显示朋友圈
     void showSearch();//显示搜索界面
-    void sendMessage(); // 发送消息
-    void addFriend(); // 添加联系人
-    void onSentBtnClicked();//发送按钮点击
-    void onContactListClicked(const QModelIndex &index); // 单击联系人列表
-    void onContactListDoubleClicked(const QModelIndex &index); // 双击联系人列表
-    void onCheckContactList_to_MessageList(const QModelIndex &index); // 联系人列表添加到消息列表
-    void addSampleBubbleMessages(); // 添加示例消息
-    void addSampleBubbleMessages(QString friendID);//添加示例消息
-    void showContactChat(QString receiverID); // 显示选中联系人的所有消息
-    void onMessageListClicked(const QModelIndex &index); // 点击消息列表
-    void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
-    void onMessageReceived(const MeChat::messageData &data); // 处理接收消息
-    void animatePageTransition(QWidget *widget); // 页面切换动画
+    void showContact_historyMessage(QString receiverID); // 显示选中联系人的所有消息
+
     void refreshContactList(); // 刷新联系人列表
     void paintRdiusPixmap(QLabel*label,const QString paintPath, int xRdius,int yRdius);// 绘制图片
 
@@ -112,15 +116,6 @@ private:
     void connectServerSignals(); // 连接服务器信号槽函数
     void onHeartbeat(); // 处理心跳消息
 
-protected:
-    // 鼠标事件处理函数
-    // ResizeMode getResizeMode(const QPoint &pos); // 获取当前鼠标所在的边缘位置
-    // void resizeWindow(const QPoint &globalPos); // 根据鼠标位置调整窗口大小
-    // void updateCursor(ResizeMode mode); // 更新鼠标光标样式
-    // void mousePressEvent(QMouseEvent *event) override;// 鼠标按下事件
-    // void mouseMoveEvent(QMouseEvent *event) override;// 鼠标移动事件
-    // void mouseReleaseEvent(QMouseEvent *event) override;// 鼠标释放事件
-    // void leaveEvent(QEvent *event) override;// 鼠标离开事件
 };
 
 #endif // CHATWINDOW_H

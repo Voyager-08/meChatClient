@@ -17,9 +17,6 @@ public:
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const override;
 
-    void setHoveredRow(int row);// 设置当前行高亮
-    void setCheckedRow(int row);// 设置当前行选中
-    void checkedOption(QPainter *painter,const QStyleOptionViewItem &option);// 设置当前行选中
 
 signals:
     void update();
@@ -27,9 +24,6 @@ signals:
 private:
     mutable QCache<QString, QPixmap> m_pixmapCache; // 缓存已加载的头像
     /*QPixmap getDefaultAvatar(int size) const;*/
-
-    int m_hoveredRow;//鼠标悬停的行
-    int m_checkedRow;//选中的行
 };
 
 #endif // MESSAGEDELEGATE_H

@@ -102,7 +102,7 @@ void LoginWindow::initUI()
     shadowEf_password->setOffset(0, 5);// 阴影偏移量(水平, 垂直)
 
     passwordLineEdit = new QLineEdit(loginWidget);
-    passwordLineEdit->setText("642510");
+    passwordLineEdit->setText("000000");
     passwordLineEdit->installEventFilter(this);// 安装事件过滤器,为后续点击做准备
     passwordLineEdit->setPlaceholderText("密码");
     passwordLineEdit->setGeometry(200, 210, 300, 33);

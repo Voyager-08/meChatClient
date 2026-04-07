@@ -69,6 +69,14 @@ void NetworkManager::sendLoginRequest(const QString &userId, const QString &pass
     sendRawData(loginObj);
 }
 
+void NetworkManager::sendLogoutRequest(const QString &userId)
+{
+    QJsonObject logoutObj;// 创建一个JSON对象来存储退出登录消息数据
+    logoutObj["type"] = "logout";
+    logoutObj["userId"] = userId;
+    sendRawData(logoutObj);
+}
+
 void NetworkManager::requestUserInfo(const QString &userId)
 {
     QJsonObject user_info;
@@ -118,6 +126,22 @@ void NetworkManager::registerUser(const QString &userId, const QString &userNick
     messageObj["userNick"] = userNick;
     messageObj["password"] = password;
     sendRawData(messageObj);
+}
+// 发送添加好友请求
+void NetworkManager::sendAddFriendRequest(const QString &friendId)
+{
+    QJsonObject add_friend;
+    add_friend["type"] = "add_friend";
+    add_friend["friendId"] = friendId;
+    sendRawData(add_friend);
+}
+// 发送搜索好友Id请求
+void NetworkManager::sendFriendStrListRequest(const QString &friendStr)
+{
+    QJsonObject add_friend_list;
+    add_friend_list["type"] = "search_friend_list";
+    add_friend_list["friendStr"] = friendStr;
+    sendRawData(add_friend_list);
 }
 
 /**
@@ -182,17 +206,23 @@ void NetworkManager::onReadyRead()
         else if (msgType == "offline_message") // 处理离线消息
         {
             qDebug() << "收到消息类型为offline_message的消息";
+            // 提取发送者ID
             QString senderId = obj["sender"].toString();
+            // 提取接收者ID
             QString receiverId = obj["receiver"].toString();
+            // 提取消息内容
             QString content = obj["content"].toString();
-            QString messageType = obj["messageType"].toString();
-            QString datetime = obj["datetime"].toString();            
-            // 转换时间格式
-            QDateTime time = QDateTime::fromString(datetime, Qt::ISODate);
+            // 提取时间戳并转换为QDateTime对象
+            QString timestampStr = obj["timestamp"].toString();
+            QDateTime time = QDateTime::fromString(timestampStr, Qt::ISODate);
             
-            // 发送离线消息信号
-            emit receiveMessage(messageData{senderId, receiverId, content, time});
-            qDebug() << "收到离线消息: " << content << " 来自: " << senderId;
+            // 如果时间戳无效，使用当前时间作为默认值
+            if (!time.isValid()) {
+                qDebug() << "离线消息时间戳无效";
+            }
+            
+            // 发送消息接收信号
+            emit receiveMessage(messageData{senderId,receiverId,content,time});
         }
         else if (msgType == "user_status")// 处理用户状态变更消息
         {
@@ -266,6 +296,45 @@ void NetworkManager::onReadyRead()
                 return;
             }
             qDebug() << "收到心跳响应消息，用户ID:" << userId;
+        }
+        else if(msgType == "search_friend_list")
+        // 处理搜索好友列表消息
+        {
+            qDebug() << "收到消息类型为search_friend_list的消息";
+            if (obj["result"].toBool())
+            {
+                emit clearAddFriendList();
+                QString count = obj["count"].toString();
+                QJsonArray friendList = obj["friendList"].toArray();
+                for (const QJsonValue &friendValue : friendList)
+                {
+                    QJsonObject friendObj = friendValue.toObject();
+                    QString friendId = friendObj["friendId"].toString();
+                    QString friendNick = friendObj["friendNick"].toString();
+                    qDebug() << "解析到好友:" << friendId << " . " << friendNick;
+                    emit receiveAddFriendList(friendId, friendNick);
+                }
+            }
+        }
+        else if(msgType == "add_friend_result")
+        // 处理添加好友结果消息
+        {
+            qDebug() << "收到消息类型为add_friend_result的消息";
+            if (obj["result"].toBool())
+            {
+                FriendInfo friendInfo;
+                friendInfo.friendId = obj["friendId"].toString();
+                friendInfo.friendNick = obj["friendNick"].toString();
+                friendInfo.avatarPath = "./images/avatar/" + friendInfo.friendId + ".png";
+                qDebug() << "添加好友成功:" << friendInfo.friendId << friendInfo.friendNick;
+                emit addFriendSuccess(friendInfo);
+            }
+            else
+            {
+                QString errorString = obj["reason"].toString();
+                qDebug() << "添加好友失败:" << errorString;
+                emit addFriendFailed(errorString);
+            }
         }
     }
 }

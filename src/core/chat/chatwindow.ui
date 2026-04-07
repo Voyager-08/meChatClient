@@ -19,7 +19,10 @@
   <property name="windowTitle">
    <string>ChatWindow</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_4">
+  <layout class="QHBoxLayout" name="horizontalLayout_5">
+   <property name="spacing">
+    <number>0</number>
+   </property>
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -32,918 +35,7 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
-   <property name="spacing">
-    <number>0</number>
-   </property>
-   <item row="0" column="1">
-    <widget class="QSplitter" name="rightLine">
-     <property name="lineWidth">
-      <number>0</number>
-     </property>
-     <property name="midLineWidth">
-      <number>0</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="handleWidth">
-      <number>1</number>
-     </property>
-     <widget class="QStackedWidget" name="centerStack">
-      <property name="minimumSize">
-       <size>
-        <width>220</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>330</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="lineWidth">
-       <number>1</number>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="centerMessagePage">
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <property name="spacing">
-         <number>5</number>
-        </property>
-        <property name="leftMargin">
-         <number>4</number>
-        </property>
-        <property name="topMargin">
-         <number>5</number>
-        </property>
-        <property name="rightMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <property name="spacing">
-           <number>7</number>
-          </property>
-          <property name="leftMargin">
-           <number>7</number>
-          </property>
-          <property name="topMargin">
-           <number>12</number>
-          </property>
-          <property name="rightMargin">
-           <number>7</number>
-          </property>
-          <property name="bottomMargin">
-           <number>12</number>
-          </property>
-          <item>
-           <widget class="QLineEdit" name="lineEdit"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QListView" name="messageListView">
-          <property name="minimumSize">
-           <size>
-            <width>220</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>330</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
-          </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
-          </property>
-          <property name="viewMode">
-           <enum>QListView::ViewMode::ListMode</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="centerContactPage">
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="spacing">
-         <number>5</number>
-        </property>
-        <property name="leftMargin">
-         <number>4</number>
-        </property>
-        <property name="topMargin">
-         <number>5</number>
-        </property>
-        <property name="rightMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <property name="spacing">
-           <number>7</number>
-          </property>
-          <property name="leftMargin">
-           <number>7</number>
-          </property>
-          <property name="topMargin">
-           <number>12</number>
-          </property>
-          <property name="rightMargin">
-           <number>7</number>
-          </property>
-          <property name="bottomMargin">
-           <number>12</number>
-          </property>
-          <item>
-           <widget class="QLineEdit" name="lineEdit_2"/>
-          </item>
-          <item>
-           <widget class="QToolButton" name="extendBtn">
-            <property name="text">
-             <string>...</string>
-            </property>
-            <property name="popupMode">
-             <enum>QToolButton::ToolButtonPopupMode::InstantPopup</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QListView" name="contactListView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>220</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>330</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="lineWidth">
-           <number>0</number>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="layoutWidget">
-      <layout class="QHBoxLayout" name="mainWidget">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <layout class="QVBoxLayout" name="InfoBox">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QStackedWidget" name="sideBarStack">
-           <property name="minimumSize">
-            <size>
-             <width>400</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="chatPage">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QStackedWidget" name="chatStack">
-               <property name="lineWidth">
-                <number>1</number>
-               </property>
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <widget class="QWidget" name="defaultChatPage">
-                <layout class="QGridLayout" name="gridLayout_3">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="placeholderLabel">
-                   <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; color:#808080;&quot;&gt;请选择一个联系人开始聊天&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/images/placeholder.png&quot; width=&quot;128&quot; height=&quot;128&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-               <widget class="QWidget" name="messageChatPage">
-                <layout class="QVBoxLayout" name="verticalLayout_7">
-                 <property name="spacing">
-                  <number>0</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QFrame" name="contactBar">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>50</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>50</height>
-                    </size>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_2">
-                    <item>
-                     <widget class="QPushButton" name="nickname">
-                      <property name="text">
-                       <string>昵称</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer">
-                      <property name="orientation">
-                       <enum>Qt::Orientation::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="moreInformation">
-                      <property name="text">
-                       <string>更多</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QSplitter" name="information">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Orientation::Vertical</enum>
-                   </property>
-                   <widget class="QScrollArea" name="messageArea">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>280</height>
-                     </size>
-                    </property>
-                    <property name="baseSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="widgetResizable">
-                     <bool>true</bool>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignJustify|Qt::AlignmentFlag::AlignVCenter</set>
-                    </property>
-                    <widget class="QWidget" name="messageScroll">
-                     <property name="geometry">
-                      <rect>
-                       <x>0</x>
-                       <y>0</y>
-                       <width>98</width>
-                       <height>278</height>
-                      </rect>
-                     </property>
-                     <layout class="QVBoxLayout" name="verticalLayout_15">
-                      <property name="spacing">
-                       <number>0</number>
-                      </property>
-                      <property name="leftMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="topMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="rightMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="bottomMargin">
-                       <number>0</number>
-                      </property>
-                      <item>
-                       <layout class="QVBoxLayout" name="messageVBox">
-                        <property name="spacing">
-                         <number>0</number>
-                        </property>
-                       </layout>
-                      </item>
-                     </layout>
-                    </widget>
-                   </widget>
-                   <widget class="MePlainTextEdit" name="inputBox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>70</height>
-                     </size>
-                    </property>
-                    <property name="baseSize">
-                     <size>
-                      <width>0</width>
-                      <height>80</height>
-                     </size>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>11</pointsize>
-                     </font>
-                    </property>
-                    <property name="cursor" stdset="0">
-                     <cursorShape>IBeamCursor</cursorShape>
-                    </property>
-                   </widget>
-                  </widget>
-                 </item>
-                 <item alignment="Qt::AlignmentFlag::AlignRight">
-                  <widget class="QPushButton" name="sent">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>50</height>
-                    </size>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::LeftToRight</enum>
-                   </property>
-                   <property name="text">
-                    <string>发送（S）</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="contactPage">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_10">
-             <item row="0" column="0">
-              <widget class="QStackedWidget" name="contactStack">
-               <property name="currentIndex">
-                <number>1</number>
-               </property>
-               <widget class="QWidget" name="InfoContactPage">
-                <layout class="QGridLayout" name="gridLayout_6">
-                 <item row="0" column="0">
-                  <widget class="QGroupBox" name="contactMessageBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>650</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="title">
-                    <string>好友信息</string>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_9">
-                    <item>
-                     <layout class="QVBoxLayout" name="verticalLayout_8">
-                      <item>
-                       <widget class="QGroupBox" name="groupBox_2">
-                        <property name="title">
-                         <string>信息</string>
-                        </property>
-                        <layout class="QGridLayout" name="gridLayout_5">
-                         <item row="2" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
-                          <widget class="QLineEdit" name="friendNoteInfo">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="text">
-                            <string/>
-                           </property>
-                           <property name="readOnly">
-                            <bool>false</bool>
-                           </property>
-                           <property name="placeholderText">
-                            <string>（备注）</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
-                          <widget class="QLineEdit" name="friendMottoInfo">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="inputMask">
-                            <string/>
-                           </property>
-                           <property name="text">
-                            <string/>
-                           </property>
-                           <property name="placeholderText">
-                            <string>（个性签名）</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="2" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
-                          <widget class="QLabel" name="friendNote">
-                           <property name="text">
-                            <string>备注：</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignmentFlag::AlignCenter</set>
-                           </property>
-                           <property name="margin">
-                            <number>11</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignHCenter">
-                          <widget class="ClickableLabel" name="friendAvatar">
-                           <property name="minimumSize">
-                            <size>
-                             <width>100</width>
-                             <height>100</height>
-                            </size>
-                           </property>
-                           <property name="text">
-                            <string>头像</string>
-                           </property>
-                           <property name="textFormat">
-                            <enum>Qt::TextFormat::PlainText</enum>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignmentFlag::AlignCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
-                          <widget class="QLineEdit" name="friendNickInfo">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="placeholderText">
-                            <string>（昵称）</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
-                          <widget class="QLabel" name="friendMotto">
-                           <property name="text">
-                            <string>个性签名</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignmentFlag::AlignCenter</set>
-                           </property>
-                           <property name="margin">
-                            <number>11</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
-                          <widget class="QLabel" name="friendNick">
-                           <property name="text">
-                            <string>昵称：</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignmentFlag::AlignCenter</set>
-                           </property>
-                           <property name="margin">
-                            <number>11</number>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QGroupBox" name="groupBox_3">
-                        <property name="title">
-                         <string>功能</string>
-                        </property>
-                        <layout class="QGridLayout" name="gridLayout_9">
-                         <property name="leftMargin">
-                          <number>25</number>
-                         </property>
-                         <property name="rightMargin">
-                          <number>25</number>
-                         </property>
-                         <property name="bottomMargin">
-                          <number>80</number>
-                         </property>
-                         <property name="horizontalSpacing">
-                          <number>54</number>
-                         </property>
-                         <item row="1" column="1">
-                          <widget class="QPushButton" name="callBtn">
-                           <property name="minimumSize">
-                            <size>
-                             <width>0</width>
-                             <height>50</height>
-                            </size>
-                           </property>
-                           <property name="text">
-                            <string>电话</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="0">
-                          <widget class="QPushButton" name="sentBtn">
-                           <property name="minimumSize">
-                            <size>
-                             <width>0</width>
-                             <height>50</height>
-                            </size>
-                           </property>
-                           <property name="text">
-                            <string>发消息</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="0" alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop">
-                          <widget class="ClickableLabel" name="changeInfoLabel">
-                           <property name="text">
-                            <string>修改信息</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-               <widget class="QWidget" name="defaultContactPage">
-                <layout class="QGridLayout" name="gridLayout_11">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="placeholderLabel_2">
-                   <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; color:#808080;&quot;&gt;请选择一个联系人开始聊天&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/images/placeholder.png&quot; width=&quot;128&quot; height=&quot;128&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="collectPage">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QGroupBox" name="collectBox">
-               <property name="title">
-                <string>收藏</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="momentsPage">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QGroupBox" name="momentBox">
-               <property name="title">
-                <string>朋友圈</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="searchPage">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_6">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QGroupBox" name="groupBox">
-               <property name="title">
-                <string>发现</string>
-               </property>
-               <property name="checkable">
-                <bool>false</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_8">
-                <item row="0" column="0">
-                 <widget class="QStackedWidget" name="stackedWidget">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="currentIndex">
-                   <number>0</number>
-                  </property>
-                  <widget class="QWidget" name="page">
-                   <layout class="QGridLayout" name="gridLayout_7">
-                    <item row="0" column="0">
-                     <layout class="QVBoxLayout" name="verticalLayout_10">
-                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
-                       <widget class="QLabel" name="label">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>30</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <family>Papyrus</family>
-                          <pointsize>18</pointsize>
-                          <italic>false</italic>
-                          <bold>true</bold>
-                          <underline>false</underline>
-                          <stylestrategy>PreferDefault</stylestrategy>
-                          <kerning>true</kerning>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>日程创建</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDateTimeEdit" name="dateTimeEdit"/>
-                      </item>
-                      <item>
-                       <widget class="QCalendarWidget" name="calendarWidget"/>
-                      </item>
-                      <item>
-                       <widget class="Line" name="line">
-                        <property name="orientation">
-                         <enum>Qt::Orientation::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QTextEdit" name="textEdit"/>
-                      </item>
-                      <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_4">
-                        <property name="spacing">
-                         <number>20</number>
-                        </property>
-                        <property name="leftMargin">
-                         <number>22</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>7</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>22</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>9</number>
-                        </property>
-                        <item>
-                         <widget class="QPushButton" name="pushButton">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>读取日程</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="pushButton_2">
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>创建日程</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
-                     </layout>
-                    </item>
-                   </layout>
-                  </widget>
-                  <widget class="QWidget" name="page_2"/>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </item>
-   <item row="0" column="0">
+   <item>
     <widget class="QFrame" name="leftBox">
      <property name="enabled">
       <bool>true</bool>
@@ -965,6 +57,9 @@
        <width>60</width>
        <height>16777215</height>
       </size>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="spacing">
@@ -1055,11 +150,1074 @@
         </property>
        </spacer>
       </item>
-      <item>
+      <item alignment="Qt::AlignmentFlag::AlignHCenter">
        <widget class="QPushButton" name="more">
         <property name="text">
          <string>更多</string>
         </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="rightBox">
+     <property name="frameShape">
+      <enum>QFrame::Shape::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_21">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QSplitter" name="rightLine">
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <property name="midLineWidth">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="handleWidth">
+         <number>0</number>
+        </property>
+        <widget class="QStackedWidget" name="listViewStack">
+         <property name="minimumSize">
+          <size>
+           <width>220</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>330</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <widget class="QWidget" name="listViewMessagePage">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frameMessage">
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Plain</enum>
+             </property>
+             <property name="lineWidth">
+              <number>0</number>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_20">
+              <property name="bottomMargin">
+               <number>11</number>
+              </property>
+              <item>
+               <layout class="QHBoxLayout" name="leftHBoxLayout2">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="lineEdit"/>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QListView" name="messageListView">
+             <property name="minimumSize">
+              <size>
+               <width>220</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>330</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+             </property>
+             <property name="sizeAdjustPolicy">
+              <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
+             </property>
+             <property name="viewMode">
+              <enum>QListView::ViewMode::ListMode</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="listViewContactPage">
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frameContact">
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Plain</enum>
+             </property>
+             <property name="lineWidth">
+              <number>0</number>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_19">
+              <property name="leftMargin">
+               <number>9</number>
+              </property>
+              <property name="bottomMargin">
+               <number>11</number>
+              </property>
+              <item>
+               <layout class="QHBoxLayout" name="leftHBoxLayout1">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="lineEdit_2"/>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="extendBtn">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="popupMode">
+                   <enum>QToolButton::ToolButtonPopupMode::InstantPopup</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QListView" name="contactListView">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>220</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>330</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="sizeIncrement">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="lineWidth">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="listViewCollectPage"/>
+         <widget class="QWidget" name="listViewSearchPage"/>
+         <widget class="QWidget" name="listViewMomentPage"/>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <layout class="QHBoxLayout" name="mainWidget">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="InfoBox">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QStackedWidget" name="mainStack">
+              <property name="minimumSize">
+               <size>
+                <width>400</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
+              <widget class="QWidget" name="MessagePage">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="QStackedWidget" name="messageStack">
+                  <property name="lineWidth">
+                   <number>1</number>
+                  </property>
+                  <property name="currentIndex">
+                   <number>1</number>
+                  </property>
+                  <widget class="QWidget" name="defaultMessagePage">
+                   <layout class="QGridLayout" name="gridLayout_3">
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="defaultMessagePhoto">
+                      <property name="text">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; color:#808080;&quot;&gt;请选择一个联系人开始聊天&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/images/placeholder.png&quot; width=&quot;128&quot; height=&quot;128&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="messageChatPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_7">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QFrame" name="contactBar">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>50</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>50</height>
+                       </size>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_2">
+                       <property name="bottomMargin">
+                        <number>9</number>
+                       </property>
+                       <item>
+                        <widget class="QPushButton" name="nickname">
+                         <property name="text">
+                          <string>昵称</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="horizontalSpacer">
+                         <property name="orientation">
+                          <enum>Qt::Orientation::Horizontal</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>40</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="moreInformation">
+                         <property name="text">
+                          <string>更多</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSplitter" name="information">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Vertical</enum>
+                      </property>
+                      <widget class="QScrollArea" name="messageArea">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>280</height>
+                        </size>
+                       </property>
+                       <property name="baseSize">
+                        <size>
+                         <width>0</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="widgetResizable">
+                        <bool>true</bool>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignJustify|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                       <widget class="QWidget" name="messageScroll">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>469</width>
+                          <height>278</height>
+                         </rect>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayout_15">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <layout class="QVBoxLayout" name="messageVBox">
+                           <property name="spacing">
+                            <number>0</number>
+                           </property>
+                          </layout>
+                         </item>
+                        </layout>
+                       </widget>
+                      </widget>
+                      <widget class="MePlainTextEdit" name="inputBox">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>70</height>
+                        </size>
+                       </property>
+                       <property name="baseSize">
+                        <size>
+                         <width>0</width>
+                         <height>80</height>
+                        </size>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <pointsize>11</pointsize>
+                        </font>
+                       </property>
+
+                      </widget>
+                     </widget>
+                    </item>
+                    <item alignment="Qt::AlignmentFlag::AlignRight">
+                     <widget class="QPushButton" name="sent">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>60</width>
+                        <height>50</height>
+                       </size>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LayoutDirection::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>发送（S）</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="ContactPage">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_10">
+                <item row="0" column="0">
+                 <widget class="QStackedWidget" name="contactStack">
+                  <property name="currentIndex">
+                   <number>0</number>
+                  </property>
+                  <widget class="QWidget" name="contactPage">
+                   <property name="styleSheet">
+                    <string notr="true">
+                  QGroupBox#contactMessageBox {
+                    background-color: white;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 12px;
+                    margin: 20px;
+                    padding: 15px;
+                  }
+                  QGroupBox#contactMessageBox::title {
+                    subcontrol-origin: margin;
+                    subcontrol-position: top left;
+                    left: 15px;
+                    top: -10px;
+                    background-color: white;
+                    padding: 0 10px;
+                    font-family: &quot;KaiTi&quot;, &quot;楷体&quot;;
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #333;
+                  }
+                  QGroupBox#groupBox_2, QGroupBox#groupBox_3 {
+                    background-color: #f8f9fa;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                    padding: 15px;
+                  }
+                  QGroupBox#groupBox_2::title, QGroupBox#groupBox_3::title {
+                    subcontrol-origin: margin;
+                    subcontrol-position: top left;
+                    left: 10px;
+                    top: -8px;
+                    background-color: #f8f9fa;
+                    padding: 0 8px;
+                    font-family: &quot;Microsoft YaHei&quot;;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #555;
+                  }
+                  QLabel {
+                    font-family: &quot;Microsoft YaHei&quot;;
+                    font-size: 14px;
+                    color: #555;
+                  }
+                  QLineEdit {
+                    background-color: white;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    font-family: &quot;Microsoft YaHei&quot;;
+                    font-size: 14px;
+                    color: #333;
+                  }
+                  QLineEdit:disabled {
+                    background-color: #f5f5f5;
+                    color: #888;
+                  }
+                  QPushButton {
+                    background-color: #f0f0f0;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 10px 20px;
+                    font-family: &quot;Microsoft YaHei&quot;;
+                    font-size: 14px;
+                    color: #333;
+                  }
+                  QPushButton:hover {
+                    background-color: #e0e0e0;
+                    border-color: #1a73e8;
+                    color: #1a73e8;
+                  }
+                  QPushButton:pressed {
+                    background-color: #d0d0d0;
+                  }
+                  ClickableLabel {
+                    color: #1a73e8;
+                    font-family: &quot;Microsoft YaHei&quot;;
+                    font-size: 14px;
+                    text-decoration: underline;
+                  }
+                  ClickableLabel:hover {
+                    color: #1557b0;
+                  }
+                 </string>
+                   </property>
+                   <layout class="QGridLayout" name="gridLayout_6">
+                    <property name="leftMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>10</number>
+                    </property>
+                    <item row="0" column="0">
+                     <widget class="QGroupBox" name="contactMessageBox">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>650</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="title">
+                       <string/>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_9">
+                       <property name="spacing">
+                        <number>10</number>
+                       </property>
+                       <property name="leftMargin">
+                        <number>15</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>15</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>15</number>
+                       </property>
+                       <item>
+                        <layout class="QVBoxLayout" name="verticalLayout_8">
+                         <property name="spacing">
+                          <number>44</number>
+                         </property>
+                         <item>
+                          <widget class="QGroupBox" name="groupBox_2">
+                           <property name="title">
+                            <string/>
+                           </property>
+                           <layout class="QVBoxLayout" name="verticalLayout_18">
+                            <property name="spacing">
+                             <number>0</number>
+                            </property>
+                            <property name="leftMargin">
+                             <number>4</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>6</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>4</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>4</number>
+                            </property>
+                            <item>
+                             <layout class="QVBoxLayout" name="verticalLayout_17">
+                              <property name="spacing">
+                               <number>14</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>7</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>9</number>
+                              </property>
+                              <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+                               <widget class="ClickableLabel" name="friendAvatar">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>100</width>
+                                  <height>100</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>100</width>
+                                  <height>100</height>
+                                 </size>
+                                </property>
+                                <property name="frameShape">
+                                 <enum>QFrame::Shape::Panel</enum>
+                                </property>
+                                <property name="frameShadow">
+                                 <enum>QFrame::Shadow::Raised</enum>
+                                </property>
+                                <property name="lineWidth">
+                                 <number>5</number>
+                                </property>
+                                <property name="midLineWidth">
+                                 <number>0</number>
+                                </property>
+                                <property name="text">
+                                 <string>头像</string>
+                                </property>
+                                <property name="textFormat">
+                                 <enum>Qt::TextFormat::PlainText</enum>
+                                </property>
+                                <property name="alignment">
+                                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                                </property>
+                                <property name="margin">
+                                 <number>0</number>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <layout class="QHBoxLayout" name="horizontalLayout">
+                                <property name="spacing">
+                                 <number>0</number>
+                                </property>
+                                <property name="leftMargin">
+                                 <number>33</number>
+                                </property>
+                                <property name="bottomMargin">
+                                 <number>0</number>
+                                </property>
+                                <item alignment="Qt::AlignmentFlag::AlignRight">
+                                 <widget class="QLabel" name="friendNick">
+                                  <property name="text">
+                                   <string>昵称：</string>
+                                  </property>
+                                  <property name="alignment">
+                                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QLineEdit" name="friendNickInfo">
+                                  <property name="enabled">
+                                   <bool>false</bool>
+                                  </property>
+                                  <property name="placeholderText">
+                                   <string>（昵称）</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                               </layout>
+                              </item>
+                              <item>
+                               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                                <property name="spacing">
+                                 <number>0</number>
+                                </property>
+                                <property name="leftMargin">
+                                 <number>32</number>
+                                </property>
+                                <item alignment="Qt::AlignmentFlag::AlignRight">
+                                 <widget class="QLabel" name="friendNote">
+                                  <property name="text">
+                                   <string>备注：</string>
+                                  </property>
+                                  <property name="alignment">
+                                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QLineEdit" name="friendNoteInfo">
+                                  <property name="enabled">
+                                   <bool>false</bool>
+                                  </property>
+                                  <property name="text">
+                                   <string/>
+                                  </property>
+                                  <property name="readOnly">
+                                   <bool>false</bool>
+                                  </property>
+                                  <property name="placeholderText">
+                                   <string>（备注）</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                               </layout>
+                              </item>
+                              <item>
+                               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                                <property name="spacing">
+                                 <number>0</number>
+                                </property>
+                                <property name="leftMargin">
+                                 <number>4</number>
+                                </property>
+                                <item alignment="Qt::AlignmentFlag::AlignRight">
+                                 <widget class="QLabel" name="friendMotto">
+                                  <property name="text">
+                                   <string>个性签名：</string>
+                                  </property>
+                                  <property name="alignment">
+                                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QLineEdit" name="friendMottoInfo">
+                                  <property name="enabled">
+                                   <bool>false</bool>
+                                  </property>
+                                  <property name="inputMask">
+                                   <string/>
+                                  </property>
+                                  <property name="text">
+                                   <string/>
+                                  </property>
+                                  <property name="placeholderText">
+                                   <string>（个性签名）</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                               </layout>
+                              </item>
+                             </layout>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QGroupBox" name="groupBox_3">
+                           <property name="title">
+                            <string/>
+                           </property>
+                           <layout class="QGridLayout" name="gridLayout_9">
+                            <property name="leftMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="horizontalSpacing">
+                             <number>42</number>
+                            </property>
+                            <property name="verticalSpacing">
+                             <number>12</number>
+                            </property>
+                            <item row="0" column="0">
+                             <widget class="QPushButton" name="sentBtn">
+                              <property name="minimumSize">
+                               <size>
+                                <width>0</width>
+                                <height>50</height>
+                               </size>
+                              </property>
+                              <property name="text">
+                               <string>发消息</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="0" column="1">
+                             <widget class="QPushButton" name="callBtn">
+                              <property name="minimumSize">
+                               <size>
+                                <width>0</width>
+                                <height>50</height>
+                               </size>
+                              </property>
+                              <property name="text">
+                               <string>电话</string>
+                              </property>
+                             </widget>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="defaultContactPage">
+                   <layout class="QGridLayout" name="gridLayout_11">
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="defaultContactPhoto">
+                      <property name="text">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; color:#808080;&quot;&gt;请选择一个联系人开始聊天&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/images/placeholder.png&quot; width=&quot;128&quot; height=&quot;128&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="MomentPage">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QStackedWidget" name="momentStack">
+                  <widget class="QWidget" name="defaultMomentPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_13">
+                    <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+                     <widget class="QLabel" name="defaultMomentPhoto">
+                      <property name="text">
+                       <string>图片</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="momentPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_10"/>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="CollectPage">
+               <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                 <widget class="QStackedWidget" name="collectStack">
+                  <widget class="QWidget" name="defaultCollectPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_12">
+                    <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+                     <widget class="QLabel" name="defaultCollectPhoto">
+                      <property name="text">
+                       <string>图片</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="collectPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_16"/>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="SearchPage">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_6">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QStackedWidget" name="searchStack">
+                  <widget class="QWidget" name="defaultSearchPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_14">
+                    <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+                     <widget class="QLabel" name="defaultSearchPhoto">
+                      <property name="text">
+                       <string>图片</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="searchPage">
+                   <layout class="QVBoxLayout" name="verticalLayout_11"/>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>

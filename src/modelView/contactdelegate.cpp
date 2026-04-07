@@ -18,11 +18,43 @@ void ContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
 {
     painter->save();
 
-    // 绘制选中背景
+    // hover背景
     if(option.state & QStyle::State_MouseOver) 
     {
-        painter->fillRect(option.rect, option.palette.alternateBase()); //  使用交替背景色填充矩形区域         painter: 指向QPainter对象的指针，用于进行绘图操作         option.rect: 需要填充的矩形区域         option.palette.alternateBase(): 获取调色板中的交替背景色
+        // 确保背景填满整个 item 区域
+        QRect fullRect = option.rect;
+        // 使用更浅的颜色填充整个区域
+        painter->fillRect(fullRect, QColor(220, 236, 249, 255));
+        // 绘制右下角阴影效果
+        painter->setPen(QPen(QColor(161, 161, 161), 2));
+        // 绘制右边框
+        painter->drawLine(fullRect.right() - 1, fullRect.top() + 1, fullRect.right() - 1, fullRect.bottom() - 1);
+        // 绘制底边框
+        painter->drawLine(fullRect.left() + 1, fullRect.bottom() - 1, fullRect.right() - 1, fullRect.bottom() - 1);
     }
+    // 选中时背景
+    if(option.state & QStyle::State_Selected) 
+    {
+        // 确保背景填满整个 item 区域
+        QRect fullRect = option.rect;
+        // 使用指定颜色填充整个区域
+        painter->fillRect(fullRect, QColor(160, 190, 220, 255));
+        // 绘制左上高亮效果
+        painter->setPen(QPen(QColor(220, 236, 249, 255), 2));
+        // 绘制左边框
+        painter->drawLine(fullRect.left(), fullRect.top(), fullRect.left(), fullRect.bottom() - 1);
+        // 绘制顶边框
+        painter->drawLine(fullRect.left(), fullRect.top(), fullRect.right() - 1, fullRect.top());
+        // 绘制右下阴影效果
+        painter->setPen(QPen(QColor(120, 150, 180, 255), 2));
+        // 绘制右边框
+        painter->drawLine(fullRect.right() - 1, fullRect.top() + 1, fullRect.right() - 1, fullRect.bottom() - 1);
+        // 绘制底边框
+        painter->drawLine(fullRect.left() + 1, fullRect.bottom() - 1, fullRect.right() - 1, fullRect.bottom() - 1);
+    }
+    
+    
+    
     // 获取数据
     QString note = index.data(Qt::DisplayRole).toString();
     QString avatarPath = index.data(static_cast<int>(ContactRoles::AvatarPathRole)).toString();
@@ -89,7 +121,7 @@ void ContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     // 恢复画家状态
     painter->restore();
 }
-
+// 设置项的大小提示
 QSize ContactDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option)

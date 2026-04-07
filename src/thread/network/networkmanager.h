@@ -25,10 +25,12 @@ public slots:
     void sendHeartbeatMessage(const QString &userId); // 发送心跳消息
     void sendMessage(const MeChat::messageData &data); // 发送消息结构体
     void sendLoginRequest(const QString &userId, const QString &password); // 登录请求
+    void sendLogoutRequest(const QString &userId); // 退出登录请求
     void requestUserInfo(const QString &userId); // 请求用户信息
-    void sendFriendRequest(const QString &userId); // 发送好友请求
+    void sendFriendRequest(const QString &userId); // 发送好友列表请求
     void registerUser(const QString &userId, const QString &userNick, const QString &password); // 注册用户
-
+    void sendAddFriendRequest(const QString &userId); // 发送添加好友请求
+    void sendFriendStrListRequest(const QString &friendStr); // 根据好友字符串发送搜索好友列表请求 
 signals:
     void connected();
     void disconnected();
@@ -41,7 +43,10 @@ signals:
     void receiveUserInfo(MeChat::UserInfo *userInfo);// 接收用户信息
     void receiveMessage(const MeChat::messageData &data);// 接收消息结构体
     void receiveFriendInfo(const MeChat::FriendInfo &friendInfo);// 接收好友信息
-
+    void receiveAddFriendList(const QString &friendId, const QString &friendNick);// 接收添加好友列表信号
+    void clearAddFriendList();// 清空添加好友列表信号
+    void addFriendSuccess(const MeChat::FriendInfo &friendInfo);// 添加好友成功信号，携带好友ID
+    void addFriendFailed(const QString &errorString);// 添加好友失败信号，携带错误信息
 private slots:
     void onReadyRead(); // 处理可读数据
     void onDisconnected();//处理断开连接

@@ -11,16 +11,17 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QFile>
-#include "ui_chatwindow.h"
 #include <QDir>
-
+#include "ui_chatwindow.h"
 
 //自定义头文件
 #include "chatwindow.h"
 #include "src/modelView/contactmodel.h"
+#include "src/modelView/addcontactmodel.h"
 #include "src/modelView/messagemodel.h"
 #include "src/modelView/contactdelegate.h"
 #include "src/modelView/messagedelegate.h"
+#include "src/modelView/addcontactdelegate.h"
 #include "src/thread/network/networkmanager.h"
 #include "src/core/extra/messagebubble.h"
 
@@ -68,18 +69,45 @@ void ChatWindow::initialUI() // 初始化界面
     sizes << 400 << 100;  // 设置聊天记录区域和输入框区域的比例
     ui->information->setSizes(sizes);
 
-    QString QSSmenuBarWidget =     
-    "QPushButton {"
-    "   background-color: transparent;"   // 透明背景
-    "   border: none;"                    // 无边框
-    "}"
-    "QPushButton:hover {"
-    "   background-color: rgba(255, 0, 0, 50);"
-    "   border-radius: 15px;"
-    "}"
-    "QPushButton:pressed {"
-    "   background-color: rgba(200,200,200,100);" // 按下时半透明效果
-    "}";
+    ui->lineEdit->setPlaceholderText("搜索");
+    ui->lineEdit_2->setPlaceholderText("搜索");//设置文本框占位符
+    ui->lineEdit->setStyleSheet(R"(
+        QLineEdit {
+            background-color: rgba(255, 255, 255, 0.4);
+            color: rgba(100, 100, 100, 1);
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 5px;
+            font-family: "KaiTi", "楷体";
+            font-size: 14px;
+        }
+        QLineEdit:hover {
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+        QLineEdit:focus {
+            border: 2px solid rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 220); /* 半透明背景以显示背景图 */
+        }
+    )");
+    ui->lineEdit_2->setStyleSheet(R"(
+        QLineEdit {
+            background-color: rgba(255, 255, 255, 0.4);
+            color: rgba(100, 100, 100, 1);
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 5px;
+            font-family: "KaiTi", "楷体";
+            font-size: 14px;
+        }
+        QLineEdit:hover {
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+        QLineEdit:focus {
+            border: 2px solid rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 220); /* 半透明背景以显示背景图 */
+        }
+    )");
+    
     ui->extendBtn->setIcon(QIcon(":/images/12.png"));
     ui->extendBtn->setIconSize(QSize(21, 21));
     ui->extendBtn->setStyleSheet(
@@ -89,39 +117,31 @@ void ChatWindow::initialUI() // 初始化界面
     "}"
     "QToolButton:hover {"
     "    border: rgba(111, 111, 111, 1) 1px solid;"
-        "background-color: rgba(255,255,255,50);" // 鼠标悬停时半透明效果
     "}"
     "QToolButton:pressed {"
         "background-color: rgba(200,200,200,100);" // 按下时半透明效果
     "}"
     "QToolButton::menu-indicator { image: none; }"
+    "QMenu {"
+        "background-color: rgba(110, 187, 255, 1); /* 半透明背景以显示背景图 */"
+        "border: 1px solid rgba(110, 187, 255, 1);"
+        "border-radius: 3px;"
+        "padding: 5px;"
+        "font-family: 'KaiTi', '楷体';"
+        "font-size: 14px;"
+    "}"
+    "QMenu::item:hover {"
+        "background-color: rgba(62, 225, 84, 1);"
+    "}"
+    "QMenu::item:selected {" 
+        "background-color: rgba(62, 225, 84, 1);"
+    "}"
     );
-    ui->lineEdit->setPlaceholderText("搜索");
-    ui->lineEdit_2->setPlaceholderText("搜索");
-    QString QSSlineEdit = R"(
-        QLineEdit {
-            background-color: rgba(255, 255, 255, 200); /* 半透明背景以显示背景图 */
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            padding: 5px;
-            font-family: "KaiTi", "楷体";
-            font-size: 14px;
-        }
-        QLineEdit:hover {
-            border: 1px solid #727679;
-        }
-        QLineEdit:focus {
-            border: 1px solid #71717b;
-            background-color: rgba(255, 255, 255, 220); /* 半透明背景以显示背景图 */
-        }
-    )";
-    ui->lineEdit->setStyleSheet(QSSlineEdit);
-    ui->lineEdit_2->setStyleSheet(QSSlineEdit);
-    //QMenu *extendMenu = new QMenu(ui->extendBtn);
     QAction *addFriendAction = ui->extendBtn->addAction("添加好友");
     connect(addFriendAction, &QAction::triggered, this, &ChatWindow::addFriend);
-    ui->extendBtn->addAction("创建笔记");
-    
+    QAction *createNoteAction = ui->extendBtn->addAction("创建笔记");
+    connect(createNoteAction, &QAction::triggered, this, &ChatWindow::createNote);
+
     // 将菜单设置为按钮的弹出菜单
     ui->extendBtn->setMenu(ui->extendBtn->menu());
     // 设置头像图片
@@ -129,26 +149,66 @@ void ChatWindow::initialUI() // 初始化界面
     paintRdiusPixmap(ui->avatar,userInfo->userAvatar, 5, 5);
 
     // 设置占位符图片并使其铺满整个可用区域
-    QPixmap placeholderPixmap(":/images/1.png");
-    ui->placeholderLabel->setPixmap(placeholderPixmap);
-    ui->placeholderLabel->setScaledContents(true); // 使图片铺满标签区域
-    ui->placeholderLabel->setAlignment(Qt::AlignCenter); // 居中显示图片
-    ui->placeholderLabel->setFixedSize(100, 100);
+    QPixmap messagePhotoPixmap(":/images/click_message.png");
+    ui->defaultMessagePhoto->setPixmap(messagePhotoPixmap);
+    ui->defaultMessagePhoto->setScaledContents(true); // 使图片铺满标签区域
+    ui->defaultMessagePhoto->setAlignment(Qt::AlignCenter); // 居中显示图片
+    ui->defaultMessagePhoto->setFixedSize(100, 100);
 
-    ui->placeholderLabel_2->setPixmap(placeholderPixmap);
-    ui->placeholderLabel_2->setScaledContents(true); // 使图片铺满标签区域
-    ui->placeholderLabel_2->setAlignment(Qt::AlignCenter); // 居中显示图片
-    ui->placeholderLabel_2->setFixedSize(100, 100);
+    QPixmap contactPhotoPixmap(":/images/click_contact.png");
+    ui->defaultContactPhoto->setPixmap(contactPhotoPixmap);
+    ui->defaultContactPhoto->setScaledContents(true); // 使图片铺满标签区域
+    ui->defaultContactPhoto->setAlignment(Qt::AlignCenter); // 居中显示图片
+    ui->defaultContactPhoto->setFixedSize(100, 100);
+    
+    QPixmap collectPhotoPixmap(":/images/click_collect.png");
+    ui->defaultCollectPhoto->setPixmap(collectPhotoPixmap);
+    ui->defaultCollectPhoto->setScaledContents(true); // 使图片铺满标签区域
+    ui->defaultCollectPhoto->setAlignment(Qt::AlignCenter); // 居中显示图片
+    ui->defaultCollectPhoto->setFixedSize(100, 100);
+    
+    QPixmap momentPhotoPixmap(":/images/click_moment.png");
+    ui->defaultMomentPhoto->setPixmap(momentPhotoPixmap);
+    ui->defaultMomentPhoto->setScaledContents(true); // 使图片铺满标签区域
+    ui->defaultMomentPhoto->setAlignment(Qt::AlignCenter); // 居中显示图片
+    ui->defaultMomentPhoto->setFixedSize(100, 100);
+    
+    QPixmap searchPhotoPixmap(":/images/click_search.png");
+    ui->defaultSearchPhoto->setPixmap(searchPhotoPixmap);
+    ui->defaultSearchPhoto->setScaledContents(true); // 使图片铺满标签区域
+    ui->defaultSearchPhoto->setAlignment(Qt::AlignCenter); // 居中显示图片
+    ui->defaultSearchPhoto->setFixedSize(100, 100);
     
     // 美化左侧导航栏
-    QString leftBoxStyle = R"(
+    ui->leftBox->setStyleSheet(R"(
         QFrame {
-            background-color: rgba(240, 240, 240, 180); /* 半透明背景以显示背景图 */
-            border: none;
+            background-color: rgba(190,216,239,1);  /* 半透明背景以显示背景图 */
+            border-right: 1px solid rgba(197, 197, 197, 1);
+            }
+    )");
+
+    // 为 frameContact 和 frameMessage 单独设置样式，避免被覆盖
+    ui->frameContact->setStyleSheet(R"(
+        QFrame {
+            border-bottom: 1px solid rgba(197, 197, 197, 1);
         }
-    )";
-    ui->leftBox->setStyleSheet(leftBoxStyle);
+    )");
     
+    ui->frameMessage->setStyleSheet(R"(
+        QFrame {
+            border-bottom: 1px solid rgba(197, 197, 197, 1);
+        }
+    )");
+    
+    // 设置 listViewStack 样式
+    ui->listViewStack->setStyleSheet(
+        R"(
+            QStackedWidget  {
+            background-color: rgba(190,216,239,1);  /* 半透明背景以显示背景图 */ 
+            border-radius: 5px;
+            }
+    )");
+
     // 美化左侧导航按钮 - 添加动画效果
     QString navButtonStyle = R"(
         QPushButton {
@@ -171,56 +231,75 @@ void ChatWindow::initialUI() // 初始化界面
     
     // 为导航按钮设置图标和样式
     ui->message->setStyleSheet(navButtonStyle);
-    ui->message->setIcon(QIcon(":/images/icon2.png"));
+    ui->message->setIcon(QIcon(":/images/click_message.png"));
     ui->message->setIconSize(QSize(32, 32));
     ui->message->setText("");// 只显示图标不显示文字
     ui->message->setToolTip("消息");
     
     ui->contact->setStyleSheet(navButtonStyle);
-    ui->contact->setIcon(QIcon(":/images/icon5.png"));
+    ui->contact->setIcon(QIcon(":/images/click_contact.png"));
     ui->contact->setIconSize(QSize(32, 32));
     ui->contact->setText("");
     ui->contact->setToolTip("联系人");
     
     ui->collect->setStyleSheet(navButtonStyle);
-    ui->collect->setIcon(QIcon(":/images/icon1.png"));
+    ui->collect->setIcon(QIcon(":/images/click_collect.png"));
     ui->collect->setIconSize(QSize(32, 32));
     ui->collect->setText("");
     ui->collect->setToolTip("收藏");
     
     ui->moments->setStyleSheet(navButtonStyle);
-    ui->moments->setIcon(QIcon(":/images/2.png"));
+    ui->moments->setIcon(QIcon(":/images/click_moment.png"));
     ui->moments->setIconSize(QSize(32, 32));
     ui->moments->setText("");
     ui->moments->setToolTip("朋友圈");
     
     ui->search->setStyleSheet(navButtonStyle);
-    ui->search->setIcon(QIcon(":/images/icon8.png"));
+    ui->search->setIcon(QIcon(":/images/click_search.png"));
     ui->search->setIconSize(QSize(32, 32));
     ui->search->setText("");
     ui->search->setToolTip("搜索");
     
     ui->more->setStyleSheet(navButtonStyle);
-    ui->more->setIcon(QIcon(":/images/icon4.png"));
-    ui->more->setIconSize(QSize(32, 32));
+    ui->more->setIcon(QIcon(":/images/setting.png"));
+    ui->more->setIconSize(QSize(20, 20));
     ui->more->setText("");
     ui->more->setToolTip("更多");
-    
-    QString ListViewStyle="QListView {"
-        "   background-color: rgba(255, 255, 255, 180);"
-        "   border: none;"
-        "   border-right: 1px solid #e0e0e0;"
-        "   font-family: 'Microsoft YaHei';"
-        "   font-size: 14px;"
-        "   outline: none;"
-        "}";
 
-    // 优化联系人列表
-    ui->contactListView->setStyleSheet(ListViewStyle);
     // 设置联系人列表样式
-    ui->messageListView->setStyleSheet(ListViewStyle);
+    ui->contactListView->setStyleSheet(R"(
+        QListView {
+            background-color: rgba(255, 255, 255, 1);
+            font-family: 'Microsoft YaHei';
+            font-size: 14px;
+            outline: none;
+            border-radius: 4px;
+        }
+        QListView:hover {
+        }
+        QListView::item:hover {
+            border-radius: 4px;
+            border-bottom: 3px solid rgba(161, 161, 161, 1);
+            border-right: 3px solid rgba(161, 161, 161, 1);
+        }
+    )");
+    // 设置消息列表样式
+    ui->messageListView->setStyleSheet(
+    R"(
+        QListView {
+            background-color: rgba(255, 255, 255, 1);
+            font-family: 'Microsoft YaHei';
+            font-size: 14px;
+            outline: none;
+            border-radius: 4px;
+        }
+        QListView:hover {
+        }
+        QListView::item:hover {
+            border-radius: 8px;
+        }
+    )");
 
-    // 优化消息区域动画
     ui->messageArea->setStyleSheet(
         "QScrollArea {"
         "   border: none;"
@@ -235,9 +314,9 @@ void ChatWindow::initialUI() // 初始化界面
     // 美化联系人栏
     QString contactBarStyle = R"(
         QFrame {
-            background-color: rgba(248, 248, 248, 180); /* 半透明背景以显示背景图 */
-            border: none;
-            border-bottom: 1px solid #e0e0e0;
+            background-color: rgba(232, 232, 232, 1);
+            border-radius: 4px;
+            border-bottom: 2px solid #e0e0e0;
         }
     )";
     ui->contactBar->setStyleSheet(contactBarStyle);
@@ -250,11 +329,14 @@ void ChatWindow::initialUI() // 初始化界面
             color: #333;
             font-family: "KaiTi", "楷体";
             font-size: 14px;
-            padding: 5px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
         }
         QPushButton:hover {
-            background-color: rgba(224, 224, 224, 150); /* 半透明悬停效果 */
+            background-color: rgba(230, 240, 255, 0.8);
+            color: #1a73e8;
+        }
+        QPushButton:pressed {
+            background-color: rgba(200, 220, 255, 0.9);
         }
     )";
     ui->nickname->setStyleSheet(contactBarButtonStyle);
@@ -272,66 +354,72 @@ void ChatWindow::initialUI() // 初始化界面
         "}"
     );
     
-    // 优化输入框动画
-    ui->inputBox->setStyleSheet(
-        "QPlainTextEdit {"
-        "   background-color: transparent;"
-        "   border: rgba(156, 155, 155, 1) 2px solid;"
-        "}"
-    );
+    // 设置输入框样式
+    ui->inputBox->setStyleSheet(R"(
+        QPlainTextEdit {
+            background-color: rgba(245, 245, 245, 0);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Microsoft YaHei';
+            font-size: 14px;
+        }
+        QPlainTextEdit:hover {
+            border-color: rgba(26, 115, 232, 0.5);
+        }
+        QPlainTextEdit:focus {
+            border-color: #1a73e8;
+            background-color: rgba(255, 255, 255, 1);
+            outline: none;
+        }
+    )");
 
     // 优化信息框动画
     ui->information->setStyleSheet(R"(
-    QSplitter::handle {
-        background-color: rgba(187, 187, 187, 0.47);
-        height: 1px;
+        QSplitter::handle {
+            background-color: rgba(187, 187, 187, 0.47);
+            height: 1px;
+        }
+        QSplitter::handle:hover {
+            background-color: rgba(26, 115, 232, 0.5);
         }
     )");
 
-
-    // 优化分割线动画
-    ui->rightLine->setStyleSheet(R"(
-    QSplitter::handle {
-        background-color: rgba(187, 187, 187, 0.47);
-        height: 1px;
-        }
-    )");
-
-    // 优化联系人栏
-    ui->contactBar->setStyleSheet(R"(
-    QFrame {
-        background-color: transparent;
-        border-bottom: 1px solid #CCCCCC;  /* 添加1像素宽的灰色下划线 */
-    }
-    )");
-
-
-    // 优化发送按钮
-    ui->sent->setEnabled(false);//禁用发送按钮
-    ui->sent->setStyleSheet(
-        "QPushButton {"
-        "   background-color: transparent;"
-        "   border: none;"
-        "   color: rgba(116, 116, 116, 1);"
-        "   font-family:KaiTi, 楷体;"
-        "   font-size: 14px;"
-        "   font-weight: 500;"
-        "   border-radius: 6px;"
-        "   padding: 5px 10px;"
-        "   margin: 10px;"
-        "   transition: background-color 0.2s;"
-        "}"
-    );
     
-    // 美化占位符标签
-    QString placeholderStyle = R"(
-        QLabel {
-            background-color: transparent; /* 透明背景以显示聊天背景图 */
-            color: rgba(139, 139, 139, 0.65);
-            font-family: "KaiTi", "楷体";
+
+    // 设置发送按钮样式
+    ui->sent->setEnabled(false);//禁用发送按钮
+    ui->sent->setStyleSheet(R"(
+        QPushButton {
+            background-color: rgba(240, 240, 240, 0.8);
+            border: 1px solid rgba(156, 155, 155, 0.5);
+            color: rgba(116, 116, 116, 1);
+            font-family: 'KaiTi', '楷体';
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin: 10px;
         }
-    )";
-    ui->placeholderLabel->setStyleSheet(placeholderStyle);
+    )");
+    
+    ui->sentBtn->setStyleSheet(
+        R"(
+            QPushButton:hover {
+                border: 1px solid rgba(57, 218, 86, 0.98);
+                background-color: rgba(57, 218, 86, 0.98);
+                color: rgba(255, 255, 255, 1);
+            }
+        )"
+    );
+    ui->callBtn->setStyleSheet(
+        R"(
+            QPushButton:hover {
+                border: 1px solid rgba(248, 69, 69, 0.98);
+                background-color: rgba(248, 69, 69, 0.98);
+                color: rgba(255, 255, 255, 1);
+            }
+        )"
+    );
 
     QPalette palette = this->palette();
     palette.setColor(QPalette::Window, QColor(255, 255, 255, 230));
@@ -348,9 +436,10 @@ void ChatWindow::initialUI() // 初始化界面
 
 void ChatWindow::initialStackWideget()//初始化主窗口stackwidget
 {
-    ui->centerStack->setCurrentWidget(ui->centerContactPage);
-    ui->sideBarStack->setCurrentWidget(ui->chatPage);
-    ui->chatStack->setCurrentWidget(ui->defaultChatPage);
+    ui->listViewStack->setCurrentWidget(ui->listViewContactPage);
+    ui->mainStack->setCurrentWidget(ui->ContactPage);
+    ui->messageStack->setCurrentWidget(ui->defaultMessagePage);
+    ui->contactStack->setCurrentWidget(ui->defaultContactPage);
     ui->messageArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏垂直滚动条
     ui->messageArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
     ui->messageArea->setFrameShape(QFrame::NoFrame); // 去掉边框
@@ -361,32 +450,113 @@ void ChatWindow::connectUISignals()// 连接UI信号槽
     // 连接发送按钮
     connect(ui->sent, &QPushButton::clicked, this, &ChatWindow::sendMessage);
     connect(ui->message, &QPushButton::clicked,[=](){
-        ui->sideBarStack->setCurrentWidget(ui->chatPage);
-        ui->centerStack->setCurrentWidget(ui->centerMessagePage);
-        animatePageTransition(ui->sideBarStack);
+        ui->mainStack->setCurrentWidget(ui->MessagePage);
+        ui->messageStack->setCurrentWidget(ui->defaultMessagePage);
+        ui->listViewStack->setCurrentWidget(ui->listViewMessagePage);
+        animatePageTransition(ui->mainStack);
+        ui->leftBox->setStyleSheet(
+            "QFrame {"
+                "background-color: rgba(163,227,206,1); /* 半透明背景以显示背景图 */"
+                "border-right: 1px solid rgba(197, 197, 197, 1);"
+            "}"
+        );
+        ui->listViewStack->setStyleSheet(R"(
+            QStackedWidget {
+                background-color: rgba(163,227,206,1);
+            }
+        )");
     });
     // 当点击联系人按钮时显示联系人页面
     connect(ui->contact, &QPushButton::clicked,[=](){
-        ui->sideBarStack->setCurrentWidget(ui->contactPage);
-        ui->centerStack->setCurrentWidget(ui->centerContactPage);
-        animatePageTransition(ui->sideBarStack);
+        ui->mainStack->setCurrentWidget(ui->ContactPage);
+        ui->contactStack->setCurrentWidget(ui->defaultContactPage);
+        ui->listViewStack->setCurrentWidget(ui->listViewContactPage);
+        ui->leftBox->setStyleSheet(
+            "QFrame {"
+                "background-color: rgba(190,216,239,1); /* 半透明背景以显示背景图 */"
+                "border-right: 1px solid rgba(197, 197, 197, 1);"
+            "}"
+        );
+        ui->listViewStack->setStyleSheet(R"(
+            QStackedWidget {
+                background-color: rgba(190,216,239,1);
+            }
+        )");
+        animatePageTransition(ui->mainStack);
     });
     // 当点击收藏按钮时显示收藏页面
     connect(ui->collect, &QPushButton::clicked,[=](){
-        ui->sideBarStack->setCurrentWidget(ui->collectPage);
-        animatePageTransition(ui->collectPage);
+        ui->mainStack->setCurrentWidget(ui->CollectPage);
+        ui->collectStack->setCurrentWidget(ui->defaultCollectPage);
+        ui->listViewStack->setCurrentWidget(ui->listViewCollectPage);
+        ui->leftBox->setStyleSheet(
+            "QFrame {"
+                "background-color: rgba(248, 171, 165, 1); /* 半透明背景以显示背景图 */"
+                "border-right: 1px solid rgba(197, 197, 197, 1);"
+            "}"
+        );
+        ui->listViewStack->setStyleSheet(R"(
+            QStackedWidget {
+                background-color: rgba(248, 171, 165, 1);
+            }
+        )");
+        animatePageTransition(ui->CollectPage);
     });
     // 当点击朋友圈按钮时显示朋友圈页面
     connect(ui->moments, &QPushButton::clicked,[=](){
-        ui->sideBarStack->setCurrentWidget(ui->momentsPage);
-        animatePageTransition(ui->momentsPage);
+        ui->mainStack->setCurrentWidget(ui->MomentPage);
+        ui->momentStack->setCurrentWidget(ui->defaultMomentPage);
+        ui->listViewStack->setCurrentWidget(ui->listViewMomentPage);
+        ui->leftBox->setStyleSheet(
+            "QFrame {"
+                "background-color: rgba(107, 255, 146, 0.5); /* 半透明背景以显示背景图 */"
+                "border-right: 1px solid rgba(197, 197, 197, 1);"
+            "}"
+        );
+        ui->listViewStack->setStyleSheet(R"(
+            QStackedWidget {
+                background-color: rgba(107, 255, 146, 0.5);
+            }
+        )");
+        animatePageTransition(ui->MomentPage);
     });
     //点击发现按钮时显示搜索页面
     connect(ui->search, &QPushButton::clicked,[=](){
-        ui->sideBarStack->setCurrentWidget(ui->searchPage);
-        animatePageTransition(ui->searchPage);
+        ui->mainStack->setCurrentWidget(ui->SearchPage);
+        ui->searchStack->setCurrentWidget(ui->defaultSearchPage);
+        ui->listViewStack->setCurrentWidget(ui->listViewSearchPage);
+        ui->leftBox->setStyleSheet(
+            "QFrame {"
+                "background-color: rgba(255, 196, 147, 1); /* 半透明背景以显示背景图 */"
+                "border-right: 1px solid rgba(197, 197, 197, 1);"
+            "}"
+        );
+        ui->listViewStack->setStyleSheet(R"(
+            QStackedWidget {
+                background-color: rgba(255, 196, 147, 1);
+            }
+        )");
+        animatePageTransition(ui->SearchPage);
     });
-
+    
+    // 连接更多按钮的点击信号
+    connect(ui->more, &QPushButton::clicked, [=]() {
+        QMenu *menu = new QMenu(this);
+        menu->addAction("设置", this, []() {
+            // 这里可以添加设置功能
+        });
+        menu->addAction("退出登录", this, [=]() {
+            // 发送退出登录信号
+            emit exitLogin(userInfo->userID);
+            // 清空用户信息
+            delete userInfo;
+            userInfo = nullptr;
+            // 关闭当前窗口
+            this->close();
+        });
+        menu->exec(QCursor::pos());
+        delete menu;
+    });
 
     // 连接输入框的回车键发送消息信号
     connect(ui->inputBox, &MePlainTextEdit::enterPressed, this, &ChatWindow::sendMessage);
@@ -403,36 +573,38 @@ void ChatWindow::connectUISignals()// 连接UI信号槽
     {
         if (!ui->inputBox->toPlainText().isEmpty()) {
             ui->sent->setEnabled(true);
-            ui->sent->setStyleSheet("QPushButton {"
-            "   background-color: #07C160;"
-            "   border: none;"
-            "   color: rgba(255, 255, 255, 1);"
-            "   font-family:KaiTi, 楷体;"
-            "   font-size: 14px;"
-            "   font-weight: 500;"
-            "   padding: 5px 10px;"
-            "   border-radius: 6px;"
-            "   margin: 10px;"
-            "}");
+            ui->sent->setStyleSheet(R"(
+            QPushButton {
+            background-color: #07C160;
+            border: 1px solid rgba(156, 155, 155, 0.5);
+            color: rgba(255, 255, 255, 1);
+            font-family: 'KaiTi', '楷体';
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin: 10px;
+            })");
         }
         else
         {
             ui->sent->setEnabled(false);//禁用发送按钮
-            ui->sent->setStyleSheet("QPushButton {"
-            "   background-color: transparent;"
-            "   border: none;"
-            "   color: rgba(116, 116, 116, 1);"
-            "   font-family:KaiTi, 楷体;"
-            "   font-size: 14px;"
-            "   font-weight: 500;"
-            "   padding: 5px 10px;"
-            "   border-radius: 6px;"
-            "   margin: 10px;"
-            "   }");
+            ui->sent->setStyleSheet(R"(
+            QPushButton {
+            background-color: rgba(240, 240, 240, 0.8);
+            border: 1px solid rgba(156, 155, 155, 0.5);
+            color: rgba(116, 116, 116, 1);
+            font-family: 'KaiTi', '楷体';
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin: 10px;
+            })");
         }
     });
     // 连接发送按钮点击事件
-    connect(ui->sentBtn, &QPushButton::clicked, this, &ChatWindow::onSentBtnClicked);
+    connect(ui->sentBtn, &QPushButton::clicked, this, &ChatWindow::clickSentBtn);
 }
 
 void ChatWindow::initialUserInfo(QString userID)//初始化用户信息
@@ -464,53 +636,30 @@ void ChatWindow::initialUserInfo(QString userID)//初始化用户信息
                               Q_ARG(QString, userID));
 }
 
-QString ChatWindow::toStringSex(Sex s)
-{
-    switch (s) {
-    case Sex::female:
-        return "女";
-    case Sex::male:
-        return "男";
-    case Sex::other:
-        return "其他";
-    default:
-        return "未知";
-    }
-}
-
-bool ChatWindow::isNonDraggableWidget(QWidget *w)//判断是否为不可拖动的组件
-{
-        if (!w) return false;
-    return w->inherits("QPushButton") ||
-           w->inherits("QLabel") ||
-           w->inherits("QPlainTextEdit") ||
-           w->inherits("QScrollArea");
-           // 可继续添加：|| w->inherits("QLineEdit") 等
-}
-
 void ChatWindow::initialModelView()//初始化模型视图
 {
     messageDelegate=new MessageDelegate(this);
     contactDelegate = new ContactDelegate(this);
     messageModel = new MessageModel(this);
     contactModel = new ContactModel(this);
+    addContactModel = new AddContactModel(this);
     ui->contactListView->setItemDelegate(contactDelegate);
     ui->contactListView->setModel(contactModel);
+    ui->contactListView->setUniformItemSizes(true);
     ui->messageListView->setItemDelegate(messageDelegate);
     ui->messageListView->setModel(messageModel);
     ui->messageListView->setUniformItemSizes(true);// 设置所有项的尺寸相同
-    ui->contactListView->setUniformItemSizes(true);
     
     // 连接消息列表点击事件
-    connect(ui->messageListView, &QListView::clicked, this, &ChatWindow::onMessageListClicked);
+    connect(ui->messageListView, &QListView::clicked, this, &ChatWindow::clickMessageList);
     // 连接单击信号到槽函数
-    connect(ui->contactListView, &QListView::clicked, this, &ChatWindow::onContactListClicked);
+    connect(ui->contactListView, &QListView::clicked, this, &ChatWindow::clickContactList);
     // 连接双击信号到槽函数
-    connect(ui->contactListView, &QListView::doubleClicked, this, &ChatWindow::onContactListDoubleClicked);
+    connect(ui->contactListView, &QListView::doubleClicked, this, &ChatWindow::clickDoubleContactList);
+    //添加好友成功后好友列表视图更新
+    connect(networkManager, &NetworkManager::addFriendSuccess, this, &ChatWindow::showContactList, Qt::QueuedConnection);
     //好友列表视图更新
     connect(networkManager, &NetworkManager::receiveFriendInfo, this, &ChatWindow::showContactList, Qt::QueuedConnection);
-    //消息列表视图更新
-    connect(networkManager, &NetworkManager::receiveMessage, this, &ChatWindow::showMessageList, Qt::QueuedConnection);
     //请求好友列表
     QMetaObject::invokeMethod(networkManager, "sendFriendRequest", Qt::QueuedConnection,
                               Q_ARG(QString, userInfo->userID));
@@ -561,10 +710,8 @@ void ChatWindow::paintRdiusPixmap(QLabel*label,const QString paintPath,int xRdiu
     QPixmap pixmap = QPixmap(paintPath);
     if (pixmap.isNull())
     {
-        qDebug() << "头像路径为空，使用默认头像";
         pixmap = QPixmap(QDir::currentPath() + "/images/avatar/default.png");
-    } 
-    qDebug() << "加载头像路径：" << paintPath;
+    }
     QPixmap pixmapPath(w, h);
     pixmapPath.fill(Qt::transparent);
     
@@ -581,38 +728,10 @@ void ChatWindow::paintRdiusPixmap(QLabel*label,const QString paintPath,int xRdiu
     label->setPixmap(pixmapPath);
 }
 
-void ChatWindow::showMessageList(const messageData& message)
+void ChatWindow::createNote()
 {
-    // 检查消息列表中是否已存在该好友的消息
-    bool found = false;
-    for (int i = 0; i < messageModel->rowCount(); ++i) {
-        QModelIndex index = messageModel->index(i, 0);
-        QString senderID = messageModel->data(index, static_cast<int>(MessageRoles::SenderIDRole)).toString();
-        if (senderID == message.senderId) {
-            // 更新已存在的消息
-            messageModel->updateMessage(message.senderId, message.content, message.timestamp);
-            found = true;
-            break;
-        }
-    }
-    
-    // 如果不存在，才添加新消息
-    if (!found) {
-        Model_Message m_message;
-        m_message.note=contactList[message.senderId].friendNick;
-        m_message.avatarPath=contactList[message.senderId].avatarPath;
-        m_message.message=message.content;
-        m_message.time=message.timestamp;
-        m_message.senderID=message.senderId;
-        messageModel->addMessage(m_message);
-    }
-    
-    // 同时更新 messageDataMap 中的消息
-    Message msg;
-    msg.role = MessageBubble::Other;
-    msg.text = message.content;
-    msg.time = message.timestamp;
-    messageDataMap[message.senderId].append(msg);
+    //打开系统自带记事本
+    system("notepad.exe");
 }
 
 void ChatWindow::showContactList(const FriendInfo& friendInfo)
@@ -630,21 +749,23 @@ void ChatWindow::showContactList(const FriendInfo& friendInfo)
 
 void ChatWindow::showCollect()
 {
-    ui->sideBarStack->setCurrentIndex(2);
+    ui->mainStack->setCurrentIndex(2);
 }
 
 void ChatWindow::showMoments()
 {
-    ui->sideBarStack->setCurrentIndex(3);
+    ui->mainStack->setCurrentIndex(3);
 }
 
 void ChatWindow::showSearch()
 {
-    ui->sideBarStack->setCurrentIndex(4);
+    ui->mainStack->setCurrentIndex(4);
 }
 
 void ChatWindow::sendMessage() // 发送消息
 {
+    // 确保输入框获取焦点
+    ui->inputBox->setFocus();
     QString text = ui->inputBox->toPlainText().trimmed(); // 获取输入框文本并去除首尾空白
     if (text.isEmpty() || receiverID.isEmpty()) return; // 如果文本为空或接收者ID为空则返回
 
@@ -684,15 +805,195 @@ void ChatWindow::sendMessage() // 发送消息
 
 void ChatWindow::addFriend()// 添加联系人
 {
+    QDialog dialog;
+    dialog.setWindowTitle("添加好友");
+    dialog.setWindowIcon(QIcon(":/images/click_contact.png"));
+    dialog.setFixedSize(700, 450);
+    
+    // 设置现代化样式
+    dialog.setStyleSheet(
+        "QDialog { "
+        "    background-color: #f0f2f5; "
+        "    border-radius: 10px; "
+        "}"
+    );
 
+    // 主垂直布局
+    QVBoxLayout mainLayout;
+    mainLayout.setContentsMargins(20, 20, 20, 20);
+    mainLayout.setSpacing(15);
+    dialog.setLayout(&mainLayout);
+
+    // 搜索区域容器
+    QWidget searchContainer(&dialog);
+    searchContainer.setObjectName("searchContainer");
+    searchContainer.setStyleSheet(
+        "#searchContainer { "
+        "    background-color: transparent; "
+        "}"
+    );
+    QHBoxLayout searchLayout;
+    searchLayout.setContentsMargins(10, 10, 10, 10);
+    searchLayout.setSpacing(10);
+    searchContainer.setLayout(&searchLayout);
+
+    // 搜索框 - 现代化样式
+    QLineEdit addFriendEdit(&searchContainer);
+    addFriendEdit.setPlaceholderText("请输入ID或昵称搜索...");
+    addFriendEdit.setMinimumHeight(40);
+    addFriendEdit.setStyleSheet(
+        "QLineEdit { "
+        "    border: 2px solid #e0e0e0; "
+        "    border-radius: 20px; "
+        "    padding: 8px 15px; "
+        "    font-size: 14px; "
+        "    background-color: #fafafa; "
+        "} "
+        "QLineEdit:hover { "
+        "    border-color: rgba(117, 219, 139, 1); "
+        "    background-color: white; "
+        "} "
+        "QLineEdit:focus { "
+        "    border-color: #0078d4; "
+        "    background-color: white; "
+        "}"
+    );
+
+    // 搜索按钮 - 现代化样式
+    QPushButton searchButton("🔍 搜索", &searchContainer);
+    searchButton.setMinimumSize(100, 40);
+    searchButton.setStyleSheet(
+        "QPushButton { "
+        "    background-color: #e0e0e0; "
+        "    color: white; "
+        "    border: none; "
+        "    border-radius: 20px; "
+        "    font-size: 14px; "
+        "    font-weight: bold; "
+        "    padding: 8px 16px; "
+        "} "
+        "QPushButton:hover { "
+        "    background-color: rgba(117, 219, 139, 1); "
+        "} "
+        "QPushButton:pressed { "
+        "    background-color: #0078d4; "
+        "    padding: 8px 16px; "
+        "}"
+    );
+
+    searchLayout.addWidget(&addFriendEdit);
+    searchLayout.addWidget(&searchButton);
+
+    // 联系人列表 - 现代化样式
+    QListView addContactListView(&dialog);
+    addContactListView.setStyleSheet(
+        "QListView { "
+        "    background-color: white; "
+        "    border: 1px solid #e0e0e0; "
+        "    border-radius: 12px; "
+        "    padding: 10px; "
+        "    outline: none; "
+        "} "
+        "QListView::item { "
+        "    border-radius: 8px; "
+        "    margin: 2px 0; "
+        "    padding: 8px; "
+        "} "
+        "QListView::item:selected { "
+        "    background-color: #e6f4ff; "
+        "    border-radius: 8px; "
+        "} "
+        "QListView::item:hover { "
+        "    background-color: #f0f8ff; "
+        "    border-radius: 8px; "
+        "} "
+        "QListView::vertical-scrollbar { "
+        "    width: 8px; "
+        "    background: transparent; "
+        "    border-radius: 4px; "
+        "} "
+        "QListView::vertical-slider { "
+        "    background: #c0c0c0; "
+        "    border-radius: 4px; "
+        "} "
+        "QListView::vertical-slider:hover { "
+        "    background: #a0a0a0; "
+        "} "
+        "QListView::vertical-slider:pressed { "
+        "    background: #808080; "
+        "} "
+        "QListView::horizontal-scrollbar { "
+        "    height: 8px; "
+        "    background: transparent; "
+        "    border-radius: 4px; "
+        "} "
+        "QListView::horizontal-slider { "
+        "    background: #c0c0c0; "
+        "    border-radius: 4px; "
+        "} "
+        "QListView::horizontal-slider:hover { "
+        "    background: #a0a0a0; "
+        "} "
+        "QListView::horizontal-slider:pressed { "
+        "    background: #808080; "
+        "}"
+    );
+    addContactListView.setSpacing(5);// 设置项间距为5px
+    addContactListView.setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);// 垂直滚动条按像素滚动,变细一点
+    addContactListView.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);// 水平滚动条隐藏
+
+    // 将搜索容器和列表添加到主布局
+    mainLayout.addWidget(&searchContainer);
+    mainLayout.addWidget(&addContactListView, 1); // 占据剩余空间
+
+    // 使用AddContactDelegate
+    AddContactDelegate addFriendDelegate(&dialog);
+    addContactListView.setItemDelegate(&addFriendDelegate);
+    addContactListView.setModel(addContactModel);
+    addContactListView.setUniformItemSizes(true);// 设置所有项的尺寸相同
+    
+    // 点击添加好友按钮
+    connect(&addFriendDelegate, &AddContactDelegate::addButtonClicked, this, [&](const QModelIndex &index){
+        QString friendId = index.data(static_cast<int>(ContactRoles::IDRole)).toString();
+        if (!friendId.isEmpty()) {
+            emit addFriendId(friendId);//发送添加好友信号
+        }
+    });
+    
+    // 连接添加好友Id到网络管理器信号
+    connect(this, &ChatWindow::addFriendId, networkManager, &NetworkManager::sendAddFriendRequest, Qt::QueuedConnection);
+    
+    // 回车事件搜索好友
+    connect(&addFriendEdit, &QLineEdit::returnPressed, this, [this, &addFriendEdit](){
+        if (!addFriendEdit.text().isEmpty()) {
+            emit searchAddFriendStr(addFriendEdit.text());
+        }
+    });
+    // 连接清空添加好友列表信号槽
+    connect(networkManager, &NetworkManager::clearAddFriendList, this, [&](){
+        addContactModel->clearContacts();
+    });
+    // 点击搜索按钮搜索好友
+    connect(&searchButton, &QPushButton::clicked, this, [this, &addFriendEdit](){
+        if (!addFriendEdit.text().isEmpty()) {
+            emit searchAddFriendStr(addFriendEdit.text());
+        }
+    });
+    connect(networkManager, &NetworkManager::receiveAddFriendList, this, [&](const QString &friendId, const QString &friendNick){
+        addContactModel->addContact(friendNick,"./images/avatar/"+friendId+".png", friendId);
+    },Qt::QueuedConnection);
+    // 连接搜索用户str到网络管理器Str查找用户列表信号
+    connect(this, &ChatWindow::searchAddFriendStr, networkManager, &NetworkManager::sendFriendStrListRequest, Qt::QueuedConnection);
+    
+    dialog.setModal(true);// 设置为模态对话框
+    dialog.exec();
 }
-
-void ChatWindow::onCheckContactList_to_MessageList(const QModelIndex &index) // 添加联系人到消息列表
+void ChatWindow::clickContactList_to_MessageList(const QModelIndex &index) // 添加联系人到消息列表
 {
     // 切换到聊天页面
-    ui->centerStack->setCurrentWidget(ui->centerMessagePage);
-    ui->sideBarStack->setCurrentWidget(ui->chatPage);  // 显示聊天主页面
-    ui->chatStack->setCurrentWidget(ui->messageChatPage);  // 显示消息页面而不是联系人信息
+    ui->listViewStack->setCurrentWidget(ui->listViewMessagePage);
+    ui->mainStack->setCurrentWidget(ui->MessagePage);  // 显示聊天主页面
+    ui->messageStack->setCurrentWidget(ui->messageChatPage);  // 显示消息页面而不是联系人信息
 
     // 获取选中的联系人信息
     QString contactID = index.data(static_cast<int>(ContactRoles::IDRole)).toString();
@@ -708,7 +1009,7 @@ void ChatWindow::onCheckContactList_to_MessageList(const QModelIndex &index) // 
     receiverID= contactID;// 更新当前接收者ID
 
     // 如果是第一次与该联系人聊天，添加初始消息
-    if (!contactSelected.contains(contactID)) {
+    if (!contact_addMessage.contains(contactID)) {
         // 检查是否有历史消息
         QString lastMessage = "(暂无消息)";
         QDateTime lastMessageTime = time;
@@ -723,10 +1024,9 @@ void ChatWindow::onCheckContactList_to_MessageList(const QModelIndex &index) // 
         // 添加联系人到消息模型，作为对话的标识
         messageModel->addMessage(contactNote, avatarpath, lastMessage, lastMessageTime, contactID);
     }
-    contactSelected[contactID] = true;// 标记该联系人已被选中
-
-    // 高亮显示对应联系人的消息项
-    // 查找该联系人在消息列表中的索引
+    contact_addMessage[contactID] = true;// 标记该联系人已被添加消息
+    
+    // 查找该联系人在消息列表中的索引,并高亮显示
     for (int i = 0; i < messageModel->rowCount(); ++i) {
         QModelIndex msgIndex = messageModel->index(i, 0);
         if (messageModel->data(msgIndex, static_cast<int>(MessageRoles::SenderIDRole)).toString() == contactID) {
@@ -735,17 +1035,28 @@ void ChatWindow::onCheckContactList_to_MessageList(const QModelIndex &index) // 
             selectionModel->select(msgIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
             
             // 同时设置委托中的高亮行
-            messageDelegate->setCheckedRow(i);
+            // messageDelegate->setCheckedRow(i);
             break;
         }
     }
     // 显示该联系人的消息
-    showContactChat(contactID);
+    showContact_historyMessage(contactID);
 }
 
-void ChatWindow::onContactListDoubleClicked(const QModelIndex &index)
+void ChatWindow::clickDoubleContactList(const QModelIndex &index)
 {
-    onCheckContactList_to_MessageList(index);
+    ui->leftBox->setStyleSheet(
+        "QFrame {"
+            "background-color: rgba(163,227,206,1); /* 半透明背景以显示背景图 */"
+            "border-right: 1px solid rgba(197, 197, 197, 1);"
+        "}"
+    );
+    ui->listViewStack->setStyleSheet(
+        "QStackedWidget {"
+            "background-color: rgba(163,227,206,1);"
+        "}"
+    );
+    clickContactList_to_MessageList(index);
 }
 
 void ChatWindow::addSampleBubbleMessages() // 添加示例消息
@@ -784,10 +1095,8 @@ void ChatWindow::addSampleBubbleMessages(QString friendID)
     messageDataMap[friendID] = messages;
 }
 
-void ChatWindow::showContactChat(QString receiverID) // 显示选中联系人的所有消息
+void ChatWindow::showContact_historyMessage(QString receiverID) // 显示选中联系人的所有消息
 {
-    // 清空现有消息
-    // 删除布局中的所有控件
     QLayoutItem *item;
     while ((item = ui->messageVBox->takeAt(0)) != nullptr) {
         delete item->widget();
@@ -807,29 +1116,40 @@ void ChatWindow::showContactChat(QString receiverID) // 显示选中联系人的
     scrollBar->setValue(scrollBar->maximum());
 }
 
-void ChatWindow::onMessageListClicked(const QModelIndex &index) // 点击消息列表
+void ChatWindow::clickMessageList(const QModelIndex &index) // 点击消息列表
 {
-    // 取消之前通过联系人点击设置的高亮状态
-    messageDelegate->setCheckedRow(-1);
-    
+       
     QString receiverID = index.data(static_cast<int>(MessageRoles::SenderIDRole)).toString();
     qDebug()<<"接收者ID："<<receiverID;
     if(this->receiverID != receiverID)//换了一个好友聊天
     {
         qDebug()<<"换了一个好友聊天";
         // 切换到消息聊天页面
-        ui->chatStack->setCurrentWidget(ui->messageChatPage);
+        ui->messageStack->setCurrentWidget(ui->messageChatPage);
     }
     else 
     {
-        if(ui->chatStack->currentWidget() == ui->defaultChatPage)ui->chatStack->setCurrentWidget(ui->messageChatPage);
-        else ui->chatStack->setCurrentWidget(ui->defaultChatPage);
+        if(ui->messageStack->currentWidget() == ui->defaultMessagePage)
+        {
+            ui->messageStack->setCurrentWidget(ui->messageChatPage);
+            //当前index对应的item作为选中状态
+            QItemSelectionModel *selectionModel = ui->messageListView->selectionModel();
+            selectionModel->clearSelection();
+            selectionModel->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        }
+        else 
+        {
+            ui->messageStack->setCurrentWidget(ui->defaultMessagePage);
+            //当前index对应的item作为未选中状态
+            QItemSelectionModel *selectionModel = ui->messageListView->selectionModel();
+            selectionModel->clearSelection();
+        }
     }
     this->receiverID = receiverID;
     QString friendNote = contactList[receiverID].friendNote;
     ui->nickname->setText(friendNote); // 更新昵称
     qDebug() << "点击了消息列表中的好友：" << friendNote;
-    showContactChat(receiverID);
+    showContact_historyMessage(receiverID);
 }
 
 void ChatWindow::onUserStatusChanged(const QString &userId, bool online)// 处理用户状态改变
@@ -839,8 +1159,19 @@ void ChatWindow::onUserStatusChanged(const QString &userId, bool online)// 处�
 
 void ChatWindow::onMessageReceived(const messageData &data)// 处理接收消息
 {
+    // 如果不存在，才添加新消息
+    if (!contact_addMessage.contains(data.senderId)) {
+        Model_Message m_message;
+        m_message.note=contactList[data.senderId].friendNick;
+        m_message.avatarPath=contactList[data.senderId].avatarPath;
+        m_message.message=data.content;
+        m_message.time=data.timestamp;
+        m_message.senderID=data.senderId;
+        messageModel->addMessage(m_message);
+        contact_addMessage[data.senderId] = true;// 标记该联系人已被添加消息
+    }
     qDebug() << "收到消息：" << data.senderId << " " << data.content << " " << data.timestamp;
-
+    
     // 检查是否是当前聊天对象的消息
     if (data.senderId == receiverID) 
     {
@@ -878,22 +1209,14 @@ void ChatWindow::onMessageReceived(const messageData &data)// 处理接收消息
 
 void ChatWindow::connectServerSignals()//绑定信号槽函数
 {
-    /*
-    初始化网络管理器并连接信号与槽函数
-    设置NetworkManager实例，并将以下信号连接到对应的槽函数:
-    - receiveMessage: 当收到网络消息时触发，连接到onMessageReceived槽函数
-    - connected: 当网络连接建立时触发，连接到onNetworkConnected槽函数
-    - disconnected: 当网络连接断开时触发，连接到onNetworkDisconnected槽函数
-    - error: 当网络发生错误时触发，连接到onNetworkError槽函数
-     */
     connect(networkManager, &NetworkManager::receiveMessage,
             this, &ChatWindow::onMessageReceived, Qt::QueuedConnection);
     //用户状态改变时调用onUserStatusChanged函数
     connect(networkManager, &NetworkManager::userStatusChanged,
-            this, &ChatWindow::onUserStatusChanged, Qt::QueuedConnection);
+        this, &ChatWindow::onUserStatusChanged, Qt::QueuedConnection);
+    connect(this, &ChatWindow::exitLogin, 
+        networkManager, &NetworkManager::sendLogoutRequest, Qt::QueuedConnection);
 }
-
-
 
 void ChatWindow::onHeartbeat()
 {
@@ -984,18 +1307,29 @@ void ChatWindow::onLoadingFinished()
     // 数据加载完成后，可以更新UI或执行其他操作
 }
 
-void ChatWindow::onSentBtnClicked()
+void ChatWindow::clickSentBtn()
 {
+    ui->leftBox->setStyleSheet(
+        "QFrame {"
+            "background-color: rgba(163,227,206,1); /* 半透明背景以显示背景图 */"
+            "border-right: 1px solid rgba(197, 197, 197, 1);"
+        "}"
+    );
+    ui->listViewStack->setStyleSheet(
+        "QStackedWidget {"
+            "background-color: rgba(163,227,206,1);"
+        "}"
+    );
     // 获取当前选中的联系人
     QModelIndex currentIndex = ui->contactListView->currentIndex();
     if (!currentIndex.isValid())return;// 如果没有选中的联系人，直接返回
     // 从当前选中的联系人获取信息并切换到聊天页面
-    onCheckContactList_to_MessageList(currentIndex);
+    clickContactList_to_MessageList(currentIndex);
 }
 
-void ChatWindow::onContactListClicked(const QModelIndex &index)//单击联系人列表
+void ChatWindow::clickContactList(const QModelIndex &index)//单击联系人列表
 {
-    ui->sideBarStack->setCurrentWidget(ui->contactPage);
+    ui->mainStack->setCurrentWidget(ui->ContactPage);
     // 更新联系人详细信息页面,获取选中的联系人信息
     QString contactID = index.data(static_cast<int>(ContactRoles::IDRole)).toString();
     QString contactNick=contactList[contactID].friendNick;//昵称
@@ -1008,5 +1342,5 @@ void ChatWindow::onContactListClicked(const QModelIndex &index)//单击联系人
     if (!avatarpath.isEmpty()) {
         paintRdiusPixmap(ui->friendAvatar, avatarpath, 10, 10);
     }
-    ui->contactStack->setCurrentWidget(ui->InfoContactPage);
+    ui->contactStack->setCurrentWidget(ui->contactPage);
 }

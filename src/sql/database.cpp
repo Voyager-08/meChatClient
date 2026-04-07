@@ -4,6 +4,7 @@
 
 Database::Database()
 {
+    QSet<QString> connectionNames;
     dbPath = QDir::currentPath() + "/sqlite/mechat.sqlite";
 }
 

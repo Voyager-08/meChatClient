@@ -49,8 +49,6 @@ add_executable(meChatClient
     src/core/chat/chatwindow.cpp
     src/core/chat/chatwindow.h
     src/core/chat/chatwindow.ui
-    src/core/extra/contactmessagebubble.cpp
-    src/core/extra/contactmessagebubble.h
     src/core/extra/messagebubble.cpp
     src/core/extra/messagebubble.h
     src/sql/database.h
@@ -68,8 +66,12 @@ add_executable(meChatClient
     src/modelView/messagemodel.h
     src/modelView/contactmodel.cpp
     src/modelView/contactmodel.h
+    src/modelView/addcontactmodel.cpp
+    src/modelView/addcontactmodel.h
     src/modelView/contactdelegate.cpp
     src/modelView/contactdelegate.h
+    src/modelView/addcontactdelegate.cpp
+    src/modelView/addcontactdelegate.h
     src/modelView/messagedelegate.cpp
     src/modelView/messagedelegate.h
     resources.qrc

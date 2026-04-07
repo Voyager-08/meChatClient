@@ -395,14 +395,14 @@ bool RegisterWidget::onRegisterClicked()
         timer.stop();// 停止定时器
         registerLabel.setText("注册成功！");
         qDebug()<<"成功显示";
-        delayTimer.start(1000); // 显示注册成功1000毫秒
+        delayTimer.start(500); // 显示注册成功500毫秒
     });
     // 注册失败定时器信号，显示注册失败结果1s后关闭对话框
     connect(&delayFailTimer, &QTimer::timeout, &registerDialog, [&]() {
         timer.stop();// 停止定时器
         registerLabel.setText("注册失败！");// 显示注册失败信息
         qDebug()<<"失败显示";
-        delayTimer.start(1000); // 显示注册失败1000毫秒
+        delayTimer.start(500); // 显示注册失败500毫秒
     });
     // 注册信号定时器信号，显示注册结果1s后关闭对话框
     connect(&delayTimer, &QTimer::timeout, &registerDialog, [&]() {

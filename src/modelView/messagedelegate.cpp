@@ -12,7 +12,7 @@
 
 // 专业级消息代理类
 MessageDelegate::MessageDelegate(QObject *parent)
-    : QStyledItemDelegate(parent), m_hoveredRow(-1), m_checkedRow(-1)
+    : QStyledItemDelegate(parent)
 {
     qDebug() << "MessageDelegate 专业版初始化成功";
 }
@@ -44,18 +44,30 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
 {
     painter->save();
     
-    // 1. 绘制背景 - 专业级设计
-    if (option.state & QStyle::State_Selected ) {
-        // 选中状态：使用主题高亮色
-        painter->fillRect(option.rect, option.palette.highlight());
-    } else if (m_hoveredRow == index.row()) {
-        // 悬停状态：柔和的浅蓝色背景
-        painter->fillRect(option.rect, QColor(235, 245, 255));
-    } else {
-        // 普通状态：干净的白色背景
-        painter->fillRect(option.rect, option.palette.base());
+    if (option.state & QStyle::State_MouseOver)
+    {
+        QRect fullRect = option.rect;
+        painter->fillRect(fullRect, QColor(235, 250, 245));
+
+        painter->setPen(QPen(QColor(140, 170, 160), 2));
+        painter->drawLine(fullRect.right() - 1, fullRect.top() + 1, fullRect.right() - 1, fullRect.bottom() - 1);
+        painter->drawLine(fullRect.left() + 1, fullRect.bottom() - 1, fullRect.right() - 1, fullRect.bottom() - 1);
     }
 
+    if (option.state & QStyle::State_Selected)
+    {
+        QRect fullRect = option.rect;
+        painter->fillRect(fullRect, QColor(120, 180, 160));
+
+        painter->setPen(QPen(QColor(90, 140, 120), 2));
+        painter->drawLine(fullRect.left(), fullRect.top(), fullRect.left(), fullRect.bottom() - 1);
+        painter->drawLine(fullRect.left(), fullRect.top(), fullRect.right() - 1, fullRect.top());
+
+        painter->setPen(QPen(QColor(140, 200, 180), 2));
+        painter->drawLine(fullRect.right() - 1, fullRect.top() + 1, fullRect.right() - 1, fullRect.bottom() - 1);
+        painter->drawLine(fullRect.left() + 1, fullRect.bottom() - 1, fullRect.right() - 1, fullRect.bottom() - 1);
+    }
+    
     // 2. 获取数据
     QString note = index.data(static_cast<int>(MessageRoles::NoteRole)).toString();
     QString avatarPath = index.data(static_cast<int>(MessageRoles::AvatarPathRole)).toString();
@@ -90,7 +102,6 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     }
     if (pixmap.isNull()) 
     {
-        qDebug() << "头像路径为空，使用默认头像";
         QPixmap tempPixmap(QDir::currentPath() + "/images/avatar/default.png");
         if (!tempPixmap.isNull()) {
             pixmap = tempPixmap.scaled(avatarSize, avatarSize,
@@ -183,13 +194,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
         painter->drawText(idRect, Qt::AlignLeft | Qt::AlignTop, "ID: " + senderID);
     }
 
-    // 10. 绘制分割线 - 专业级分隔
-    if (index.row() < index.model()->rowCount() - 1) {
-        QPen separatorPen(QColor(230, 230, 230), 1);
-        painter->setPen(separatorPen);
-        painter->drawLine(option.rect.left(), option.rect.bottom() - 1, 
-                         option.rect.right(), option.rect.bottom() - 1);
-    }
+
 
     painter->restore();
 }
@@ -198,29 +203,4 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
 QSize MessageDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const
 {
     return QSize(0, 75); // 专业级高度：75px
-}
-
-// 新增：设置悬停行
-void MessageDelegate::setHoveredRow(int row)
-{
-    if (m_hoveredRow != row) {
-        m_hoveredRow = row;
-        emit update();
-    }
-}
-
-// 新增：设置选中行
-void MessageDelegate::setCheckedRow(int row)
-{
-    if (m_checkedRow != row) {
-        m_checkedRow = row;
-        emit update();
-    }
-}
-
-void MessageDelegate::checkedOption(QPainter *painter,const QStyleOptionViewItem &option)
-{
-    painter->save();
-    painter->fillRect(option.rect, option.palette.highlight());
-    painter->restore();
 }

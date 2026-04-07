@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     initializeUI();
     connectSignals();
     linkServer();
+    setWindowStyle();
 }
 
 MainWindow::~MainWindow()
@@ -37,13 +38,13 @@ void MainWindow::initializeUI()
     // 设置主窗口属性
     setWindowTitle("meChat");
     setWindowIcon(QIcon(":/images/10.png"));  // 设置窗口图标
-    setGeometry(100, 100, 700, 450);
+    setBaseSize(700, 450);
     setMouseTracking(true);  // 允许鼠标跟踪
     
     // 创建栈式窗口作为中心组件
     stackedWidget = new QStackedWidget(this);
     
-    // 使用 QVBoxLayout 来管理布局（QWidget 没有 setCentralWidget）
+    // 使用 QVBoxLayout 来管理布局
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);  // 设置边距为0，使 stackedWidget 充满整个窗口
     layout->addWidget(stackedWidget);
@@ -83,12 +84,19 @@ void MainWindow::linkServer()
     QMetaObject::invokeMethod(networkManager, &NetworkManager::connectToServer, Qt::QueuedConnection);
 }
 
+void MainWindow::setWindowStyle()
+{
+}
 
 void MainWindow::onUserLoggedIn(const QString &userID, const QString &password)
 {
     
     qDebug() << "主窗口: 用户已登录，ID=" << userID;
     
+    // 隐藏主窗口
+    this->hide();
+    //位置往左上移动
+    move(350, 140);
     // 如果之前已有聊天窗口，先删除
     if (chatWindow != nullptr) {
         stackedWidget->removeWidget(chatWindow);
@@ -98,8 +106,7 @@ void MainWindow::onUserLoggedIn(const QString &userID, const QString &password)
 
     // 创建新的聊天窗口，传入网络管理器
     chatWindow = new ChatWindow(userID, this, networkManager);
-    // 设置 ChatWindow 充满整个 stackedWidget（重要！否则会看到 MainWindow 的框架）
-    chatWindow->setGeometry(0, 0, stackedWidget->width(), stackedWidget->height());
+    // 设置 ChatWindow 充满整个 stackedWidget
     chatWindow->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(850, 600); // 设置主窗口最小尺寸，确保聊天窗口有足够空间显示
     setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX); // 取消最大尺寸限制，允许用户调整窗口大小
@@ -109,23 +116,16 @@ void MainWindow::onUserLoggedIn(const QString &userID, const QString &password)
     // 添加到栈式窗口并设置为当前窗口
     stackedWidget->addWidget(chatWindow);
     stackedWidget->setCurrentWidget(chatWindow);
+    
+    // 显示主窗口
+    this->show();
 
-    show();  // 重新显示窗口使标志改变生效
 }
 
 void MainWindow::onUserLoggedOut()
 {
     qDebug() << "主窗口: 用户已退出登录";
-    setFixedSize(this->size());
-    // 删除聊天窗口
-    if (chatWindow != nullptr) {
-        stackedWidget->removeWidget(chatWindow);
-        delete chatWindow;
-        chatWindow = nullptr;
-    }
+    setFixedSize(700, 450);
     
-    show();  // 重新显示窗口使标志改变生效
-    
-    // 清空登录表单，返回登录页面
     stackedWidget->setCurrentWidget(loginWindow);
 }
