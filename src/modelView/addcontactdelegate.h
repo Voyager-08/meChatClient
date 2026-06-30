@@ -28,6 +28,11 @@ signals:
 private:
     // 计算添加按钮的矩形区域
     QRect addButtonRect(const QStyleOptionViewItem &option) const;
+    // 按钮状态索引
+    mutable QModelIndex m_hoveredIndex;
+    mutable QModelIndex m_pressedIndex;
+
+protected:
 };
 
 #endif // ADDCONTACTDELEGATE_H

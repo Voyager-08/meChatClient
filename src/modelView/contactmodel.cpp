@@ -66,3 +66,15 @@ void ContactModel::clearContacts()
     m_contacts.clear(); //  清空联系人列表
     endResetModel(); //  通知视图重置模型操作完成
 }
+
+void ContactModel::removeFriend(const QString &friendId)
+{
+    for (int i = 0; i < m_contacts.size(); ++i) {
+        if (m_contacts[i].id == friendId) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_contacts.removeAt(i);
+            endRemoveRows();// 通知视图删除行操作完成
+            break;
+        }
+    }
+}

@@ -63,6 +63,7 @@ private slots:
     void togglePasswordVisibility(); // 切换密码可见性
     void onForgetPassword(); // 忘记密码处理
     bool login();//登录功能
+    void loadUserHistoryInfo();// 加载用户历史登录信息
     void loginError(const QString &errorString);// 登录错误处理
     void switchToRegister();//切换到注册界面
     void switchToLogin();//切换到登录界面

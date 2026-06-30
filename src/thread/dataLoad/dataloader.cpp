@@ -18,12 +18,8 @@ DataLoader::DataLoader(QObject *parent) : QObject(parent), m_database(nullptr), 
 
 DataLoader::~DataLoader()
 {
-    // 停止线程
-    if (m_thread->isRunning()) {
-        m_thread->quit();
-        m_thread->wait();
-    }
-    delete m_thread;
+    // 停止加载
+    m_stopLoading = true;
     
     // 关闭数据库
     if (m_database) {
@@ -31,6 +27,13 @@ DataLoader::~DataLoader()
         delete m_database;
         m_database = nullptr;
     }
+    
+    // 停止线程
+    if (m_thread->isRunning()) {
+        m_thread->quit();
+        m_thread->wait();
+    }
+    delete m_thread;
 }
 
 void DataLoader::startLoading(const QString &userId)
@@ -62,23 +65,7 @@ void DataLoader::loadData(const QString &userId)
         qDebug() << "用户信息加载完成";
     }
     
-    // 加载好友列表
-    QList<FriendInfo> friendList = m_database->getFriendList(userId);
-    if (!m_stopLoading) {
-        emit friendListLoaded(friendList);
-        qDebug() << "好友列表加载完成，共" << friendList.size() << "个好友";
-    }
-    
-    // 加载每个好友的消息
-    for (const FriendInfo &friendInfo : friendList) {
-        if (m_stopLoading) break;
-        
-        QList<messageData> messages = m_database->getMessages(userId, friendInfo.friendId);
-        if (!messages.isEmpty()) {
-            emit messagesLoaded(friendInfo.friendId, messages);
-            qDebug() << "好友" << friendInfo.friendId << "的消息加载完成，共" << messages.size() << "条消息";
-        }
-    }
+    // 注意：不再加载好友列表，好友信息从服务端获取
     
     if (!m_stopLoading) {
         emit loadingFinished();

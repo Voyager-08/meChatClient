@@ -24,6 +24,7 @@ LoginWindow::LoginWindow(QWidget *parent, NetworkManager *networkManager)
     setBackground();// 设置背景
     connectUISignals();// 信号槽连接
     showAvatar();// 显示头像
+    loadUserHistoryInfo();// 加载用户历史登录信息
 }
 
 
@@ -67,7 +68,6 @@ void LoginWindow::initUI()
     shadowEf_user->setOffset(0, 5);// 阴影偏移量(水平, 垂直)
 
     userIDLineEdit = new QLineEdit(loginWidget);
-    userIDLineEdit->setText("23631642510");// 测试用默认填充用户名
     userIDLineEdit->installEventFilter(this);// 安装事件过滤器,为后续点击做准备
     userIDLineEdit->setPlaceholderText("账号");
     userIDLineEdit->setGeometry(200, 150, 300, 33);// 设置距离窗口的坐标为(90px, 100px)和大小宽350px，高33px
@@ -102,7 +102,6 @@ void LoginWindow::initUI()
     shadowEf_password->setOffset(0, 5);// 阴影偏移量(水平, 垂直)
 
     passwordLineEdit = new QLineEdit(loginWidget);
-    passwordLineEdit->setText("000000");
     passwordLineEdit->installEventFilter(this);// 安装事件过滤器,为后续点击做准备
     passwordLineEdit->setPlaceholderText("密码");
     passwordLineEdit->setGeometry(200, 210, 300, 33);
@@ -281,6 +280,72 @@ bool LoginWindow::login()//登录功能
     return false;
 }
 
+#include <QFile>
+#include <QDir>      // 必须包含，用于创建文件夹
+#include <QFileInfo> // 可选，用于获取文件信息
+#include <QDebug>
+
+void LoginWindow::loadUserHistoryInfo()
+{
+    QString filePath = "./Data/loginInfo/userHistory.txt";
+    
+    // 1. 【核心修改】确保目录存在
+    QDir dir("./Data/loginInfo");
+    if (!dir.exists()) {
+        // mkpath 可以递归创建多级目录（如果 Data 也不存在，它会一起创建）
+        if (!dir.mkpath(".")) {
+            qDebug() << "错误：无法创建目录 ./Data/loginInfo";
+            return;
+        }
+    }
+
+    // 2. 定义文件对象
+    QFile file(filePath);
+
+    // 3. 如果文件不存在，先创建一个空文件（可选，防止读取时文件不存在报错）
+    if (!file.exists()) {
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            qDebug() << "错误：无法创建文件" << file.errorString();
+            return;
+        }
+        file.close();
+        qDebug() << "文件不存在，已创建新文件";
+        // 注意：新创建的文件是空的，下面的读取逻辑不会执行，直接结束函数
+        return; 
+    }
+
+    // 4. 打开文件进行读取
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "错误：无法打开文件进行读取" << file.errorString();
+        return;
+    }
+
+    // 5. 读取并解析内容
+    // 建议：如果想读取“上一次”登录的用户，通常读取最后一行。
+    // 这里保持你的逻辑，读取第一行（或者你可以把读取到的内容赋值给变量，循环结束后再 setText）
+    
+    QString lastUserID;
+    QString lastPassword;
+
+    while (!file.atEnd()) {
+        QString line = file.readLine().trimmed();
+        if (!line.isEmpty()) {
+            // 解析格式 userID:password
+            // 使用 0,0 和 1,1 确保只截取特定段，防止密码里也有冒号
+            lastUserID = line.section(':', 0, 0);
+            lastPassword = line.section(':', 1, 1); // 从第1段取到最后，兼容密码含冒号的情况
+        }
+    }
+    
+    file.close();
+
+    // 6. 设置到输入框 (在循环外设置，确保显示的是读取到的最后一行数据)
+    if (!lastUserID.isEmpty()) {
+        userIDLineEdit->setText(lastUserID);
+        passwordLineEdit->setText(lastPassword);
+        qDebug() << "加载历史记录成功 - 账号:" << lastUserID;
+    }
+}
 void LoginWindow::loginError(const QString &errorString)
 {
     resetLineEdit=1;// 设置重置输入框标志
@@ -548,6 +613,16 @@ void LoginWindow::switchToLogin()//切换到登录界面
 
 void LoginWindow::loginChatwindow(const QString userID)
 {
+    QFile file("./Data/loginInfo/userHistory.txt");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open file for writing";
+        return;
+    }
+    //覆盖写入用户ID和密码
+    file.write(userID.toStdString().c_str());
+    file.write(":");
+    file.write(savedPassword.toStdString().c_str());
+    file.close();
     qDebug() << "登录成功，用户ID:" << userID;
     // 发送登录成功信号给主窗口，主窗口负责创建 ChatWindow 和页面切换
     emit userLoggedIn(userID, savedPassword);

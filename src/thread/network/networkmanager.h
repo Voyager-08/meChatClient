@@ -22,6 +22,7 @@ public:
 
 public slots:
     void connectToServer();// 连接到服务器
+    void sendFile(const QString &filePath, const QString &userId); // 发送文件到服务器
     void sendHeartbeatMessage(const QString &userId); // 发送心跳消息
     void sendMessage(const MeChat::messageData &data); // 发送消息结构体
     void sendLoginRequest(const QString &userId, const QString &password); // 登录请求
@@ -34,6 +35,7 @@ public slots:
 signals:
     void connected();
     void disconnected();
+    void deleteFriendSuccess(const QString &friendId);// 删除好友成功信号，携带好友ID
     void error(const QString &errorString);
     void userStatusChanged(const QString &userId, bool online);
     void loginSuccess(const QString &userId); // 登录成功信号，携带用户ID
@@ -47,12 +49,14 @@ signals:
     void clearAddFriendList();// 清空添加好友列表信号
     void addFriendSuccess(const MeChat::FriendInfo &friendInfo);// 添加好友成功信号，携带好友ID
     void addFriendFailed(const QString &errorString);// 添加好友失败信号，携带错误信息
+
 private slots:
     void onReadyRead(); // 处理可读数据
     void onDisconnected();//处理断开连接
     void onError(); // 处理网络错误
     void sendRawData(const QJsonObject &data); // 发送原始数据
     void onConnected(); // 处理连接成功
+    void deleteFriend(const QString &friendId);// 删除好友信号，携带好友ID
 
 
 private:

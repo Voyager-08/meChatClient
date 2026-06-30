@@ -85,6 +85,18 @@ void MessageModel::clearMessages()
     if (!m_messages.isEmpty()) {
         beginRemoveRows(QModelIndex(), 0, m_messages.size() - 1); //  通知视图即将删除所有行
         m_messages.clear(); //  清空消息列表
-        endRemoveRows(); //  通知视图删除行操作完成
+        endRemoveRows();// 通知视图删除行操作完成
+    }
+}
+
+void MessageModel::removeFriend(const QString &friendId)
+{
+    for (int i = 0; i < m_messages.size(); ++i) {
+        if (m_messages[i].senderID == friendId) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_messages.removeAt(i);
+            endRemoveRows();// 通知视图删除行操作完成
+            break;
+        }
     }
 }

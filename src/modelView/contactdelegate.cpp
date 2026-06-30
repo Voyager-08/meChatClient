@@ -85,7 +85,6 @@ void ContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
         m_avatarCache.insert(avatarPath, avatarPixmap);
     }
 
-
     // 创建圆角矩形头像（只创建一次）
     QPixmap roundedAvatar(40, 40);
     roundedAvatar.fill(Qt::transparent);

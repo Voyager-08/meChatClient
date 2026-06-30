@@ -14,6 +14,7 @@
 #include <QGraphicsDropShadowEffect>    // 添加阴影效果支持
 #include <QRegularExpression>           // 正则表达式
 #include <QThread>                      // 线程，用于延迟关闭对话框
+#include <QFile>                        // 文件操作
 
 #include "registerwidget.h"
 #include "src/custom/clickablelabel.h"
@@ -424,6 +425,13 @@ bool RegisterWidget::onRegisterClicked()
     passwordLineEdit->clear();
     confirmPasswordLineEdit->clear();
     showPasswordCheckBox->setChecked(false);
+    QString savePath = "./images/avatar/" + userID + ".png";
+    scaledPixmap.save(savePath);
+    //把文件发送到服务器
+    QMetaObject::invokeMethod(networkManager, "sendFile", Qt::QueuedConnection,
+                              Q_ARG(QString, savePath),
+                              Q_ARG(QString, userID));  
+    
     emit registrationSucceeded(); // 发送注册成功的信号
     return true;
 }
@@ -453,14 +461,12 @@ void RegisterWidget::onSelectAvatar()
         if (!pixmap.isNull())
         {
             // 将图片缩放为80x80大小，保持宽高比，并使用平滑变换
-            QPixmap scaledPixmap = pixmap.scaled(80, 80, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            // 保存用户头像到本地文件images/avatar/userID.png
-            QString savePath = QDir::currentPath() + QString("/images/avatar/%1.png").arg(userID);
-            scaledPixmap.save(savePath);
+            scaledPixmap = pixmap.scaled(80, 80, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             // 设置按钮的图标为缩放后的图片
             avatarButton->setIcon(QIcon(scaledPixmap));
             // 设置按钮图标的显示大小为80x80
             avatarButton->setIconSize(QSize(80, 80));
+            
         }
     }
     if(fileName.isEmpty())return;

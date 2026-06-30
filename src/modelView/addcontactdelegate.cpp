@@ -25,6 +25,12 @@ void AddContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
     {
         painter->fillRect(option.rect, option.palette.alternateBase());
     }
+    // 绘制按钮按下样式
+    if(index == m_pressedIndex)
+    {
+        // 按钮按下样式
+        painter->fillRect(option.rect, option.palette.highlight());
+    }
     
     // 获取数据
     QString name = index.data(static_cast<int>(ContactRoles::NameRole)).toString();
@@ -129,6 +135,8 @@ bool AddContactDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, c
         QRect buttonRect = addButtonRect(option);
         // 检查点击位置是否在添加按钮内
         if (buttonRect.contains(mouseEvent->pos())) {
+            //按钮样式改变
+            m_pressedIndex = index;
             emit addButtonClicked(index);
             return true;
         }

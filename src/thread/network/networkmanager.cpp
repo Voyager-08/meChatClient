@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 
 #include "src/custom/struct.h"
 
@@ -104,7 +105,6 @@ void NetworkManager::sendRawData(const QJsonObject &data)
     QByteArray jsonData = doc.toJson(QJsonDocument::Compact) + "\n"; // 必须加 \n！
     m_socket->write(jsonData);
     m_socket->flush(); // 确保数据立即发送
-    qDebug() << "客户端发送原始数据:" << jsonData;
 }
 
 void NetworkManager::onConnected()
@@ -262,7 +262,6 @@ void NetworkManager::onReadyRead()
         // 处理好友列表消息
         {
             qDebug() << "收到消息类型为friend_list的消息";
-            // 注意：服务端发送的字段是 "friendList"
             QJsonArray friendList = obj["friendList"].toArray(); 
         
             for (const QJsonValue &friendValue : friendList)
@@ -336,7 +335,49 @@ void NetworkManager::onReadyRead()
                 emit addFriendFailed(errorString);
             }
         }
+        else if(msgType == "avatar_data")
+        {
+            QString userId = obj["userId"].toString();
+            QString avatarPath = QDir::currentPath() + "/images/avatar/" + userId + ".png";
+            //检查文件是否存在
+            if(!QFile::exists(avatarPath))
+            {
+                // 解析avatarData字段为base64编码,并保存到文件为./images/avatar/userId.png
+                QByteArray avatarData = QByteArray::fromBase64(obj["avatarData"].toString().toUtf8());
+                QFile avatarFile(avatarPath);
+                avatarFile.open(QIODevice::WriteOnly);
+                avatarFile.write(avatarData);
+                avatarFile.close();
+                qDebug() << "收到消息类型为avatar_data的消息";
+                qDebug() << "保存头像到文件:" << avatarPath;
+            }
+            qDebug() << "头像文件已存在";
+        }
+        else if(msgType == "delete_friend_result")
+        // 处理删除好友结果消息
+        {
+            qDebug() << "收到消息类型为delete_friend_result的消息";
+            if (obj["result"].toBool())
+            {
+                QString friendId = obj["friendId"].toString();
+                qDebug() << "删除好友成功:" << friendId;
+                emit deleteFriendSuccess(friendId);
+            }
+            else
+            {
+                QString errorString = obj["reason"].toString();
+                qDebug() << "删除好友失败:" << errorString;
+            }
+        }
     }
+}
+
+void NetworkManager::deleteFriend(const QString &friendId)
+{
+    QJsonObject delete_friend;
+    delete_friend["type"] = "delete_friend";
+    delete_friend["friendId"] = friendId;
+    sendRawData(delete_friend);
 }
 
 void NetworkManager::onDisconnected()
@@ -349,6 +390,23 @@ void NetworkManager::onError()
 {
     qDebug() << "网络错误:" << m_socket->errorString();
     emit error(m_socket->errorString());
+}
+
+void NetworkManager::sendFile(const QString &filePath, const QString &userId)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "无法打开文件:" << filePath;
+        return;
+    }
+    QByteArray fileData = file.readAll();
+    file.close();
+    qDebug() << "发送文件:" << filePath;
+    QJsonObject fileObj;
+    fileObj["type"] = "avatar_file";
+    fileObj["userId"] = userId;
+    fileObj["fileData"] = QString(fileData.toBase64());
+    sendRawData(fileObj);
 }
 
 void NetworkManager::sendHeartbeatMessage(const QString &userId)

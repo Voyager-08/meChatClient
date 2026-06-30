@@ -33,7 +33,6 @@ public slots:
     // 加载数据的槽函数
     void loadData(const QString &userId);
     void loadMessages(const QString &userId, const QString &friendId);
-
 private:
     QThread *m_thread;
     Database *m_database;

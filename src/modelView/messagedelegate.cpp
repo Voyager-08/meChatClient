@@ -102,7 +102,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     }
     if (pixmap.isNull()) 
     {
-        QPixmap tempPixmap(QDir::currentPath() + "/images/avatar/default.png");
+        QPixmap tempPixmap(":/images/avatar/default.png");
         if (!tempPixmap.isNull()) {
             pixmap = tempPixmap.scaled(avatarSize, avatarSize,
                                                 Qt::KeepAspectRatio,

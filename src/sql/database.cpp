@@ -98,10 +98,13 @@ void Database::closeDatabase()
         qDebug() << "SQLite database connection:" << m_connectionName << "closed";
     }
 
-    if (!m_connectionName.isEmpty()) {
-        QSqlDatabase::removeDatabase(m_connectionName);
-        m_connectionName.clear();
-    }
+    // 注意：在Qt中，removeDatabase必须在所有使用该连接的QSqlQuery对象销毁后调用
+    // 由于我们无法确定所有查询是否已完成，这里暂时不调用removeDatabase
+    // 让Qt在程序结束时自动清理
+    // if (!m_connectionName.isEmpty()) {
+    //     QSqlDatabase::removeDatabase(m_connectionName);
+    //     m_connectionName.clear();
+    // }
 }
 
 bool Database::createTables()

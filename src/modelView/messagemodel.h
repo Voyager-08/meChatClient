@@ -22,6 +22,7 @@ public:
     void addMessage(const QString &name, const QString &avatarPath, const QString &message, const QDateTime &time, const QString &ID);//添加消息重载
     void updateMessage(const QString &senderID, const QString &message, const QDateTime &time);//更新消息
     void clearMessages();//清空消息列表
+    void removeFriend(const QString &friendId);//删除好友消息列表
 
 private:
     QList<Model_Message> m_messages;//消息列表

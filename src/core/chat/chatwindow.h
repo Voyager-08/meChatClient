@@ -84,7 +84,10 @@ private:
     void initialStackWideget();// 初始化堆栈窗口
     void initialModelView();// 初始化模型视图
     void initialUserInfo(QString userID);// 初始化用户信息
+
     void connectUISignals();// 连接信号槽
+    void connectServerSignals(); // 连接服务器信号槽函数
+    void connectDataLoaderSignals(); // 连接DataLoader信号槽函数
 
     // 窗口状态相关函数
     void animatePageTransition(QWidget *widget); // 页面切换动画
@@ -98,22 +101,22 @@ private:
     void clickContactList(const QModelIndex &index); // 单击联系人列表
     void clickDoubleContactList(const QModelIndex &index); // 双击联系人列表
     void clickContactList_to_MessageList(const QModelIndex &index); // 联系人列表添加到消息列表
-
+    void contextMenuRequested(const QPoint &pos); // 右键菜单请求槽函数
     void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
     void onMessageReceived(const MeChat::messageData &data); // 处理接收消息
 
     void sendMessage(); // 发送消息
+    void sendAddFriendSuccessMessage(MeChat::FriendInfo friendInfo);// 发送添加好友成功消息 
     void showContactList(const MeChat::FriendInfo& friendInfo);//显示联系人列表
     void showCollect();//显示收藏界面
     void showMoments();//显示朋友圈
     void showSearch();//显示搜索界面
     void showContact_historyMessage(QString receiverID); // 显示选中联系人的所有消息
 
-    void refreshContactList(); // 刷新联系人列表
+    void deleteFriend(const QString friendId); // 删除好友成功
+    void refreshMessageList(const QString &friendID,QString text); // 刷新消息列表
     void paintRdiusPixmap(QLabel*label,const QString paintPath, int xRdius,int yRdius);// 绘制图片
 
-    // 网络相关函数
-    void connectServerSignals(); // 连接服务器信号槽函数
     void onHeartbeat(); // 处理心跳消息
 
 };
