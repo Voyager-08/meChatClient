@@ -15,10 +15,11 @@
 
 #include "loginwindow.h"
 #include "registerwidget.h"
-#include "src/thread/network/networkmanager.h"
+#include "src/event/eventbus.h"
 
-LoginWindow::LoginWindow(QWidget *parent, NetworkManager *networkManager)
-    : QWidget(parent),networkManager(networkManager)
+
+LoginWindow::LoginWindow(QWidget *parent)
+    : QWidget(parent)
 {
     initUI();// 初始化界面
     setBackground();// 设置背景
@@ -36,7 +37,7 @@ void LoginWindow::initUI()
     setWindowIcon(QIcon(":/images/10.png"));
 
     loginWidget=new QWidget(this);// 主登录窗口组件
-    registerWidget=new RegisterWidget(this,networkManager);// 主注册窗口组件
+    registerWidget=new RegisterWidget(this);// 主注册窗口组件
     stackedWidget=new QStackedWidget(this);// 用于切换登录和注册界面
     stackedWidget->addWidget(loginWidget);
     stackedWidget->addWidget(registerWidget);
@@ -253,37 +254,16 @@ void LoginWindow::setBackground()
 
 bool LoginWindow::login()//登录功能
 {
-    // 使用队列连接确保在网络线程中执行
-    QMetaObject::invokeMethod(networkManager, &NetworkManager::connectToServer, Qt::QueuedConnection);
     // 检查输入框
     if(resetLineEdit==1) return false;// 如果是重置输入框状态，则不执行登录操作
     //点击登录就需要记住输入的账号和密码
     savedUserID = userIDLineEdit->text();
     savedPassword = passwordLineEdit->text();
-    qDebug() << "用户ID:" << savedUserID << "密码:" << savedPassword;
+    qDebug() << "用户 ID:" << savedUserID << "密码:" << savedPassword;
     if(checkInputFields()) return false;// 检查输入框
-    if(!networkManager->isConnected()) // 检查是否已连接到服务器
-    {
-        loginError("服务器连接失败!");
-        return false;// 如果未连接，则不执行登录操作
-    }
-
-    // 先断开旧的连接，再建立新的连接，确保不重复
-    disconnect(networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow);
-    disconnect(networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError);
-    connect(networkManager, &NetworkManager::loginSuccess, this, &LoginWindow::loginChatwindow, Qt::QueuedConnection);
-    connect(networkManager, &NetworkManager::loginFailed, this, &LoginWindow::loginError, Qt::QueuedConnection);
-    // 使用队列连接确保在网络线程中执行
-    QMetaObject::invokeMethod(networkManager, "sendLoginRequest", Qt::QueuedConnection,
-                              Q_ARG(QString, savedUserID),
-                              Q_ARG(QString, savedPassword));  
-    return false;
+    emit loginRequested(savedUserID, savedPassword); // 发出登录请求信号
+    return true;
 }
-
-#include <QFile>
-#include <QDir>      // 必须包含，用于创建文件夹
-#include <QFileInfo> // 可选，用于获取文件信息
-#include <QDebug>
 
 void LoginWindow::loadUserHistoryInfo()
 {
@@ -346,6 +326,7 @@ void LoginWindow::loadUserHistoryInfo()
         qDebug() << "加载历史记录成功 - 账号:" << lastUserID;
     }
 }
+
 void LoginWindow::loginError(const QString &errorString)
 {
     resetLineEdit=1;// 设置重置输入框标志
@@ -382,26 +363,35 @@ void LoginWindow::loginError(const QString &errorString)
 
 void LoginWindow::connectUISignals()// 信号槽连接
 {
-    connect(registerWidget->backButton, &QPushButton::clicked, this, &LoginWindow::switchToLogin);
-    connect(registerWidget, &RegisterWidget::registrationSucceeded,this, &LoginWindow::registerSuccess);
+    // 内部 UI 信号连接
     connect(loginButton, &QPushButton::clicked, this, &LoginWindow::login);
     connect(userIDLineEdit, &QLineEdit::returnPressed, this, &LoginWindow::login);
     connect(passwordLineEdit, &QLineEdit::returnPressed, this, &LoginWindow::login);
-    connect(registerButton, &QPushButton::clicked, this, &LoginWindow::switchToRegister);
+    connect(registerButton, &QPushButton::clicked, this, &LoginWindow::handleSwitchToRegister);
     connect(showPasswordButton, &QCheckBox::toggled, this, &LoginWindow::togglePasswordVisibility);
     connect(forgetPasswordButton, &QPushButton::clicked, this, &LoginWindow::onForgetPassword);
-    //账号输入框内容改变时显示头像
     connect(userIDLineEdit, &QLineEdit::textChanged, this, &LoginWindow::showAvatar);
+    
+    // RegisterWidget 信号转接 - 对外隐藏 RegisterWidget 的存在
+    connect(registerWidget->backButton, &QPushButton::clicked, this, &LoginWindow::handleSwitchToLogin);
+    connect(registerWidget, &RegisterWidget::registrationSucceeded, this, &LoginWindow::handleRegisterSuccess);
+    connect(registerWidget, &RegisterWidget::sendRegisterRequest, this, &LoginWindow::registerRequested);
+    connect(registerWidget, &RegisterWidget::sendAvatarFileRequest, this, &LoginWindow::onSendAvatarFileRequest);
+    
+    // 将 EventBus 转发的注册结果信号转发给 RegisterWidget，用于控制局部 dialog 关闭
+    connect(this, &LoginWindow::registerSuccess, registerWidget, &RegisterWidget::onRegisterSuccess);
+    connect(this, &LoginWindow::registerFailed, registerWidget, &RegisterWidget::onRegisterFailed);
 }
 
-void LoginWindow::registerSuccess()// 注册成功
+void LoginWindow::handleRegisterSuccess()// 注册成功（内部槽）- 处理 UI 更新
 {
-    switchToLogin();
+    handleSwitchToLogin();
     QString newUserID = registerWidget->getUserID();
-    userIDLineEdit->setText(newUserID); // 将注册成功后返回的用户ID设置到登录窗口的用户名输入框中
+    userIDLineEdit->setText(newUserID); // 将注册成功后返回的用户 ID 设置到登录窗口的用户名输入框中
     passwordLineEdit->setText("");
     userAvatar->setPixmap(QPixmap(registerWidget->avatarPath));// 显示注册成功后的用户头像
     qDebug()<<"用户头像:"<<registerWidget->avatarPath;
+    // 注意：registerSuccess 信号已在 onRegisterSuccess() 中发出，此处不再重复发出
 }
 
 void LoginWindow::togglePasswordVisibility()// 切换密码可见性
@@ -531,7 +521,7 @@ void LoginWindow::showAvatar()
     userAvatar->setPixmap(roundedAvatar);
 }
 
-void LoginWindow::switchToRegister()//切换到注册界面
+void LoginWindow::handleSwitchToRegister()//切换到注册界面（内部槽）
 {
     // 创建动画
     QPropertyAnimation *animation = new QPropertyAnimation(stackedWidget, "geometry");
@@ -571,7 +561,7 @@ void LoginWindow::switchToRegister()//切换到注册界面
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void LoginWindow::switchToLogin()//切换到登录界面
+void LoginWindow::handleSwitchToLogin()//切换到登录界面（内部槽）
 {
     // 创建动画
     QPropertyAnimation *animation = new QPropertyAnimation(stackedWidget, "geometry");
@@ -624,6 +614,46 @@ void LoginWindow::loginChatwindow(const QString userID)
     file.write(savedPassword.toStdString().c_str());
     file.close();
     qDebug() << "登录成功，用户ID:" << userID;
-    // 发送登录成功信号给主窗口，主窗口负责创建 ChatWindow 和页面切换
-    emit userLoggedIn(userID, savedPassword);
+}
+
+void LoginWindow::onLoginSuccess(const QString &userID)
+{
+    qDebug() << "登录成功,用户ID:" << userID;
+    // 保存登录信息到文件
+    loginChatwindow(userID);
+    // 触发登录成功信号
+    emit loginSuccess(userID);
+}
+
+void LoginWindow::onLoginFailed(const QString &errorString)
+{
+    qDebug() << "登录失败,错误信息:" << errorString;
+    // 显示错误信息到 UI
+    loginError(errorString);
+}
+void LoginWindow::onRegisterSuccess(const QString &userID)
+{
+    qDebug() << "注册成功,用户ID:" << userID;
+    // 调用 RegisterWidget 的方法，触发内部信号关闭 dialog
+    registerWidget->onRegisterSuccess();
+}
+
+void LoginWindow::onRegisterFailed(const QString &errorString)
+{
+    qDebug() << "注册失败,错误信息:" << errorString;
+    // 调用 RegisterWidget 的方法，触发内部信号关闭 dialog
+    registerWidget->onRegisterFailed(errorString);
+}
+
+void LoginWindow::onNetworkErrorOccurred(const QString &errorString)
+{
+    qDebug() << "网络错误:" << errorString;
+    // 显示错误信息到 UI
+    loginError(errorString);
+}
+
+void LoginWindow::onSendAvatarFileRequest(const QString &filePath, const QString &userId)
+{
+    qDebug() << "发送头像文件到服务器,文件路径:" << filePath << "用户ID:" << userId;
+    emit sendAvatarFileRequest(filePath, userId);
 }

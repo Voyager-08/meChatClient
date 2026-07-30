@@ -4,7 +4,6 @@
 #include <QStyledItemDelegate>
 #include <QModelIndex>
 #include <QObject>
-
 class AddContactDelegate : public QStyledItemDelegate
 {
     Q_OBJECT

@@ -1,22 +1,16 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-#include <QSqlDatabase>
-#include <QSqlQuery>
 #include <QString>
-#include <QSqlError>
-#include <QUuid>
-#include <QList>
-#include <QDebug>
-#include <QDateTime>
+#include <QSqlDatabase>
 #include "src/custom/struct.h"
 
-using namespace MeChat;
+using namespace chat;
 
 class Database
 {
 public:
-    Database();
+    explicit Database();//explicit构造函数，防止隐式类型转换
     ~Database();
 
     QSqlDatabase database() const { return db; }
@@ -24,6 +18,9 @@ public:
     void close();
     QString connectionName() const;
     bool isOpen() const { return db.isOpen(); }
+
+    //数据库路径
+    bool setDbPath();
 
     // 用户相关操作
     bool saveUserInfo(const UserInfo &userInfo);
@@ -36,8 +33,8 @@ public:
     bool deleteFriendship(const QString &userId, const QString &friendId);
 
     // 消息相关操作
-    bool saveMessage(const messageData &message);
-    QList<messageData> getMessages(const QString &userId, const QString &friendId);
+    bool saveMessage(const MessageInfo &messageInfo);
+    QList<MessageInfo> getMessages(const QString &userId, const QString &friendId);
     bool markMessageAsRead(const QString &messageId);
 
     // 初始化数据库（创建表）
@@ -48,8 +45,6 @@ private:
     QString dbPath;
     QString m_connectionName;
 
-    bool openDatabase();
-    void closeDatabase();
     bool createTables();
 };
 

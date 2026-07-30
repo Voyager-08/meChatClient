@@ -1,134 +1,126 @@
-# meChat - 桌面即时通讯客户端
+# meChat 即时通讯客户端
 
-基于 Qt6 开发的跨平台桌面即时通讯软件，支持实时消息收发、好友管理、历史记录持久化。
+## 项目概述
 
-## 功能特性
+基于 Qt/C++ 开发的跨平台即时通讯应用，采用现代化的软件架构设计，实现了高内聚、低耦合的系统结构。
 
-- **用户系统**：注册、登录、历史登录记忆
-- **实时通讯**：TCP 长连接 + 心跳保活，消息实时收发
-- **好友管理**：搜索添加好友、删除好友、好友列表展示
-- **消息系统**：文本消息发送/接收、本地历史消息加载
-- **界面交互**：页面切换动画、消息气泡淡入动画、右键菜单
+## 技术亮点
 
-## 技术栈
+### 1. Composition Root 架构模式
 
-| 类别 | 技术 |
-|------|------|
-| 语言 | C++17 |
-| 框架 | Qt6 (Widgets) |
-| 网络 | QTcpSocket |
-| 数据库 | SQLite |
-| 构建 | CMake |
-| 编译器 | MinGW |
+- 在 `main.cpp` 中集中创建所有依赖对象（EventBus、NetworkManager、DatabaseManager）
+- 通过依赖注入将服务层传递给 `MainWindow`，实现控制反转（IoC）
+- 消除了全局单例的滥用，提升了代码的可测试性和可维护性
 
-## 项目结构
+```cpp
+// Composition Root - 依赖组装
+EventBus eventBus;
+MainWindow window(&eventBus, &networkManager, &databaseManager);
+```
+
+### 2. 纯信号中介模式（Pure Signal Mediator）
+
+- `EventBus` 作为纯信号路由器，不包含任何业务逻辑
+- 实现了 UI 层与服务层的完全解耦
+- 所有信号连接使用 `Qt::QueuedConnection` 确保线程安全
+- 清晰的信号分类：请求信号（UI → Service）和响应信号（Service → UI）
+
+```cpp
+// 信号转发链路
+ChatWindow → EventBus → NetworkManager/DatabaseManager → EventBus → ChatWindow
+```
+
+### 3. 多线程架构
+
+- `NetworkManager` 和 `DatabaseManager` 运行在独立子线程
+- 通过信号槽机制实现跨线程通信，避免阻塞 UI 线程
+- 使用 `QMetaObject::invokeMethod` 实现线程安全的初始化
+
+```cpp
+// 子线程管理
+QThread networkThread;
+networkManager.moveToThread(&networkThread);
+QMetaObject::invokeMethod(&networkManager, &NetworkManager::initNetwork, Qt::QueuedConnection);
+```
+
+### 4. 严格的信号转发机制
+
+- 底层 Widget 信号必须通过上层 Window 转发
+- EventBus 只绑定 Window 级别的接口，不直接连接 Widget
+- 实现了清晰的职责分离和信号流向
+
+```cpp
+// 信号转发示例
+LoginWidget → LoginWindow → EventBus → NetworkManager
+RegisterWidget → LoginWindow → EventBus → NetworkManager
+```
+
+### 5. 智能指针防御性编程
+
+- 使用 `QPointer<T>` 管理动态创建/销毁的对象（如 ChatWindow）
+- 外部传入的依赖使用 `QPointer` 防止悬空指针
+- 自动置空机制避免访问已销毁对象导致的崩溃
+
+```cpp
+QPointer<ChatWindow> chatWindow;      // 动态创建/销毁
+QPointer<EventBus> eventBus;          // 外部传入依赖
+QPointer<NetworkManager> networkManager;
+```
+
+### 6. Model/View 架构
+
+- 采用 Qt 的 Model/View 模式实现数据与界面分离
+- 自定义 Model（ContactModel、MessageModel、AddContactModel）
+- 自定义 Delegate（ContactDelegate、MessageDelegate）实现个性化渲染
+- 支持大量数据的懒加载和高效显示
+
+### 7. 模块化设计
 
 ```
 src/
-├── main.cpp                    # 程序入口
-├── core/                       # 核心界面
-│   ├── main/mainwindow.*       #   主窗口（登录/聊天页面切换）
-│   ├── login/                  #   登录注册模块
-│   │   ├── loginwindow.*       #     登录窗口
-│   │   └── registerwidget.*    #     注册组件
-│   ├── chat/chatwindow.*       #   聊天主窗口
-│   └── extra/messagebubble.*   #   消息气泡控件
-├── thread/                     # 多线程模块
-│   ├── network/networkmanager.*#   网络通信线程
-│   └── dataLoad/dataloader.*   #   数据加载线程
-├── modelView/                  # Model/View 层
-│   ├── messagemodel.*          #   消息列表 Model
-│   ├── messagedelegate.*       #   消息列表 Delegate
-│   ├── contactmodel.*          #   联系人 Model
-│   ├── contactdelegate.*       #   联系人 Delegate
-│   ├── addcontactmodel.*       #   添加好友 Model
-│   └── addcontactdelegate.*    #   添加好友 Delegate
-├── sql/
-│   └── database.*              # SQLite 数据库封装
-└── custom/                     # 自定义组件
-    ├── struct.h                #   数据结构定义
-    ├── meplaintextedit.*       #   自定义输入框
-    └── clickablelabel.*        #   可点击标签
+├── core/           # 核心业务逻辑
+│   ├── chat/       # 聊天模块
+│   ├── login/      # 登录注册模块
+│   ├── main/       # 主窗口（Composition Root）
+│   └── extra/      # 扩展功能（消息气泡等）
+├── event/          # 事件总线（信号中介）
+├── network/        # 网络通信层
+├── sql/            # 数据库持久化层
+├── modelView/      # 数据模型与视图委托
+└── custom/         # 自定义控件与数据结构
 ```
 
-## 架构设计
+### 8. 依赖注入与控制反转
 
-### 多线程架构
+- UI 层不直接依赖服务层，通过信号间接通信
+- 服务层不依赖 UI 层，通过信号返回结果
+- 所有依赖在 Composition Root 中显式注入
+- 提升了代码的可测试性，便于 Mock 和单元测试
 
-```
-┌─────────────────────────────────────────────────┐
-│                  UI 主线程                       │
-│  MainWindow → LoginWindow → ChatWindow          │
-│  (页面渲染 / 动画 / 用户交互)                     │
-└───────────────┬────────────────┬────────────────┘
-                │  信号槽         │  信号槽
-                ▼                ▼
-┌───────────────────────┐ ┌───────────────────────┐
-│    网络线程            │ │    数据加载线程        │
-│  NetworkManager       │ │  DataLoader           │
-│  (TCP Socket / 心跳)   │ │  (SQLite 读写)        │
-└───────────────────────┘ └───────────────────────┘
-```
+## 核心功能
 
-- 网络 I/O 与数据库操作分离到独立线程，通过 `QObject::moveToThread` 实现
-- 线程间完全通过 Qt 信号槽通信，使用 `Qt::QueuedConnection` 保证线程安全
-- `QMetaObject::invokeMethod` 跨线程调度网络发送操作
+- 用户注册与登录
+- 实时消息收发
+- 好友管理（添加、删除、搜索）
+- 消息历史记录本地存储
+- 心跳保活机制
+- 用户在线状态同步
+- 文件传输
+- 朋友圈/收藏功能
 
-### 网络协议
+## 技术栈
 
-基于 TCP Socket + JSON 的自定义应用层协议，支持以下消息类型：
+- **语言**: C++11/14
+- **框架**: Qt 6.5.3
+- **架构**: Composition Root + Pure Signal Mediator
+- **并发**: Qt 多线程 + 信号槽机制
+- **持久化**: SQLite（通过 QSqlDatabase）
+- **网络**: TCP Socket 通信
 
-| 消息类型 | 说明 |
-|----------|------|
-| `login` / `login_result` | 登录请求/响应 |
-| `register` / `register_result` | 注册请求/响应 |
-| `message` / `message_result` | 消息发送/确认 |
-| `heartbeat` / `heartbeat_result` | 心跳保活 |
-| `friend_list` / `friend_info` | 好友列表/信息 |
-| `add_friend` / `add_friend_result` | 添加好友 |
-| `delete_friend` / `delete_friend_result` | 删除好友 |
-| `search_friend` | 搜索好友 |
-| `user_info` | 用户信息 |
-| `logout` | 退出登录 |
+## 设计原则
 
-### Model/View/Delegate
+- **单一职责原则（SRP）**: 每个类只负责一个功能领域
+- **开闭原则（OCP）**: 通过信号槽机制扩展功能，无需修改现有代码
+- **依赖倒置原则（DIP）**: 高层模块不依赖低层模块，都依赖抽象（信号接口）
+- **接口隔离原则（ISP）**: EventBus 提供细粒度的信号接口
 
-采用 Qt Model/View 架构驱动列表渲染：
-
-- **Model**：继承 `QAbstractListModel`，管理数据源，通过自定义 Role 传递多字段数据
-- **Delegate**：继承 `QStyledItemDelegate`，重写 `paint` 实现头像圆角裁剪、多行文本渲染
-- **缓存优化**：`QCache` / `QHash` 缓存已加载头像，避免重复磁盘 I/O
-
-## 构建与运行
-
-### 环境要求
-
-- CMake >= 3.16
-- Qt >= 6.5
-- MinGW 编译器
-
-### 编译
-
-```bash
-mkdir build && cd build
-cmake .. -G "MinGW Makefiles"
-cmake --build .
-```
-
-### 运行
-
-```bash
-./bin/meChatClient.exe
-```
-
-## 核心亮点
-
-- **自研 TCP 应用层协议**：JSON 消息体 + `msgType` 路由分发，支持 10+ 消息类型
-- **三线程异步架构**：UI / 网络 / 数据库完全分离，信号槽解耦，无竞态问题
-- **自定义消息气泡**：继承 `QWidget` 自绘圆角气泡 + 三角箭头，`QPropertyAnimation` 淡入动画
-- **Model/View/Delegate 分层渲染**：头像缓存、圆角裁剪、多行文本，列表流畅不卡顿
-- **本地 SQLite 持久化**：三表设计 + 参数化查询，历史消息秒级加载
-
-## License
-
-MIT

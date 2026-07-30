@@ -11,39 +11,28 @@
 #include <QTimer>
 #include "src/custom/struct.h"
 
-namespace Ui {class ChatWindow;}
 class MessageModel;
 class ContactModel;
 class AddContactModel;
 class ContactDelegate;
 class MessageDelegate;
 class ContactMessageBubble;
-class NetworkManager;
 class ClickableLabel;
 class QLabel;
-class DataLoader;
-//枚举enum会定义一系列新的类型
-enum class ResizeMode;
-struct Message;
+class Message;
 
-enum class ResizeMode { // 窗口拉伸模式枚举
-    None,  //  无方向或位置
-    Left,  //  左方向
-    Right,  //  右方向
-    Top,  //  上方向
-    Bottom,  //  下方向
-    TopLeft,  //  左上方向
-    TopRight,  //  右上方向
-    BottomLeft,  //  左下方向
-    BottomRight  //  右下方向
-};
+using namespace chat;
+namespace Ui { class ChatWindow; }  
 
 class ChatWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ChatWindow(QString userID,QWidget *parent = nullptr,NetworkManager *networkManager = nullptr);
+    explicit ChatWindow(QString userID,QWidget *parent = nullptr );
     ~ChatWindow();
+    
+    // 启动数据加载（登录成功后由 MainWindow 调用）
+    void startDataLoading();
 
 private:
 
@@ -52,7 +41,7 @@ private:
     QList<QWidget*> buttonWidgets;// 存储按钮的列表
     
     //信息数据结构
-    MeChat::UserInfo *userInfo; // 当前用户信息
+    UserInfo *userInfo; // 当前用户信息
     QString receiverID; // 当前消息接收者ID
     ContactModel *contactModel;// 联系人模型
     AddContactModel *addContactModel;// 添加联系人模型
@@ -60,25 +49,53 @@ private:
     ContactDelegate *contactDelegate; // 联系人委托
     MessageDelegate *messageDelegate; // 消息委托
     QHash<QString, QList<Message>> messageDataMap; // 存储消息数据映射
-    QHash<QString, MeChat::FriendInfo> contactList; // 存储联系人
+    QHash<QString, FriendInfo> contactList; // 存储联系人
     QHash<QString, bool> contact_addMessage; // 存储联系人是否已被添加消息
-
-    //网络
-    NetworkManager *networkManager; // 网络管理器
     QTimer *heartbeatTimer;          // 心跳定时器
-    DataLoader *dataLoader;          // 数据加载器
 
 signals:
-    void exitLogin(QString userID); // 退出登录信号
-    void avatarLoaded(QPixmap pixmap);
-    void addFriendId(const QString &friendId);
-    void searchAddFriendStr(const QString &friendStr);
-private slots:
-    // DataLoader 信号槽
-    void onUserInfoLoaded(const MeChat::UserInfo &userInfo);
-    void onFriendListLoaded(const QList<MeChat::FriendInfo> &friendList);
-    void onMessagesLoaded(const QString &friendId, const QList<MeChat::messageData> &messages);
+    // ========== 网络请求信号 (UI -> EventBus -> NetworkManager) ==========
+    void sendMessage(const MessageInfo &data);// 发送消息
+    void sendLogoutRequest(const QString &userId); // 发送退出登录请求
+    void sendHeartbeatMessage(const QString &userId); // 发送心跳消息
+    void sendUserInfoRequest(const QString &userId);// 请求用户信息
+    void sendFriendListRequest(const QString &userId);// 请求好友列表
+    void sendAddFriendRequest(const QString &friendId);// 添加好友
+    void sendSearchFriendRequest(const QString &text);// 搜索好友
+    void sendDeleteFriendRequest(const QString &friendId);// 删除好友
+    void sendFileRequest(const QString &filePath, const QString &userId);// 发送文件请求
+    
+    // ========== 数据加载请求信号 (UI -> EventBus -> DatabaseManager) ==========
+    void loadUserInfoRequest(const QString &userId);// 加载用户信息请求
+    void loadFriendMessagesRequest(const QString &userId, const QString &friendId);// 加载好友消息请求
+    void loadLocalDataRequest(const QString &userId);// 加载本地数据请求（登录成功后触发）
+
+    // ========== EventBus -> ChatWindow 响应槽 ==========
+    void addFriendSuccess(const FriendInfo &friendInfo);
+    void addFriendFailed(const QString &errorString);
+    void receiveAddFriendList(const QString &friendId, const QString &friendNick); // 接收添加好友列表
+
+public slots:
+    // ========== EventBus -> ChatWindow 响应槽 ==========
+    // 网络响应
+    void onUserInfoLoaded(const UserInfo &userInfo);
+    void onSendMessage(); // 发送消息
+    void onMessageReceived(const MessageInfo &data); // 接收消息
+    void onReceiveFriendInfo(const FriendInfo &friendInfo); // 接收好友信息
+    void onAddFriendSuccess(FriendInfo friendInfo); // 添加好友成功
+    void onAddFriendFailed(const QString &errorString); // 添加好友失败
+    void onDeleteFriend(const QString &friendId,bool isSuccess); // 删除好友成功
+    void onReceiveAddFriendList(const QString &friendId, const QString &friendNick); // 接收添加好友列表
+    void onUserStatusChanged(const QString &userId, bool online); // 用户状态改变
+    // 数据加载响应
+    void onFriendListLoaded(const QList<FriendInfo> &friendList);
+    void onMessagesLoaded(const QString &friendId, const QList<MessageInfo> &messages);
     void onLoadingFinished();
+
+private slots:
+    // UI 内部槽
+    void onAddFriend(); // 添加联系人
+
 private:
     void initialUI();// 初始化UI
     void initialStackWideget();// 初始化堆栈窗口
@@ -86,14 +103,9 @@ private:
     void initialUserInfo(QString userID);// 初始化用户信息
 
     void connectUISignals();// 连接信号槽
-    void connectServerSignals(); // 连接服务器信号槽函数
-    void connectDataLoaderSignals(); // 连接DataLoader信号槽函数
 
     // 窗口状态相关函数
     void animatePageTransition(QWidget *widget); // 页面切换动画
-    void addSampleBubbleMessages(); // 添加示例消息
-    void addSampleBubbleMessages(QString friendID);//添加示例消息
-    void addFriend(); // 添加联系人
 
     void createNote();// 创建笔记
     void clickMessageList(const QModelIndex &index); // 点击消息列表
@@ -102,18 +114,11 @@ private:
     void clickDoubleContactList(const QModelIndex &index); // 双击联系人列表
     void clickContactList_to_MessageList(const QModelIndex &index); // 联系人列表添加到消息列表
     void contextMenuRequested(const QPoint &pos); // 右键菜单请求槽函数
-    void onUserStatusChanged(const QString &userId, bool online); // 处理用户状态改变
-    void onMessageReceived(const MeChat::messageData &data); // 处理接收消息
+    QString getUserAvatar(QString userID);// 获取用户头像
 
-    void sendMessage(); // 发送消息
-    void sendAddFriendSuccessMessage(MeChat::FriendInfo friendInfo);// 发送添加好友成功消息 
-    void showContactList(const MeChat::FriendInfo& friendInfo);//显示联系人列表
-    void showCollect();//显示收藏界面
-    void showMoments();//显示朋友圈
-    void showSearch();//显示搜索界面
+    void addFriendSuccessMessage(FriendInfo friendInfo);// 发送添加好友成功消息 
     void showContact_historyMessage(QString receiverID); // 显示选中联系人的所有消息
 
-    void deleteFriend(const QString friendId); // 删除好友成功
     void refreshMessageList(const QString &friendID,QString text); // 刷新消息列表
     void paintRdiusPixmap(QLabel*label,const QString paintPath, int xRdius,int yRdius);// 绘制图片
 

@@ -3,7 +3,7 @@
 #include <QPixmap>
 #include <QFile>
 #include <QDebug>  
-
+using namespace chat;
 MessageModel::MessageModel(QObject *parent)// 显示构造函数，必须传父对象指针
     : QAbstractListModel(parent)// 调用父类构造函数
 {
@@ -21,18 +21,18 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
     if (!index.isValid() || index.row() >= m_messages.size())
         return QVariant(); //  返回一个空的QVariant对象，表示无效或未找到的数据
 
-    const Model_Message &message = m_messages.at(index.row()); //  获取指定索引位置的消息引用
+    const MessageMod &message = m_messages.at(index.row()); //  获取指定索引位置的消息引用
 
     switch (role) { //  根据不同的角色(role)返回对应的数据
-    case static_cast<int>(MessageRoles::NoteRole): //  当角色为姓名角色时，返回消息的姓名
+    case static_cast<int>(MessageRol::NoteRole): //  当角色为备注角色时，返回消息的备注
         return message.note;
-    case static_cast<int>(MessageRoles::AvatarPathRole): //  当角色为头像路径角色时，返回消息的头像路径
+    case static_cast<int>(MessageRol::AvatarPathRole): //  当角色为头像路径角色时，返回消息的头像路径
         return message.avatarPath;
-    case static_cast<int>(MessageRoles::MessageRole): //  当角色为消息角色时，返回消息
+    case static_cast<int>(MessageRol::MessageRole): //  当角色为消息角色时，返回消息
         return message.message;
-    case static_cast<int>(MessageRoles::TimeRole): //  当角色为时间角色时，返回消息时间
+    case static_cast<int>(MessageRol::TimeRole): //  当角色为时间角色时，返回消息时间
         return message.time;
-    case static_cast<int>(MessageRoles::SenderIDRole): //  当角色为发送者ID角色时，返回ID
+    case static_cast<int>(MessageRol::SenderIDRole): //  当角色为发送者ID角色时，返回ID
         return message.senderID;
     case Qt::DisplayRole: //  当角色为默认显示角色时，返回消息的姓名
         return message.note;
@@ -44,15 +44,15 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> MessageModel::roleNames() const
 {
     QHash<int, QByteArray> roles; //  创建一个QHash<int, QByteArray>类型的哈希表，用于存储角色名称映射
-    roles[static_cast<int>(MessageRoles::NoteRole)] = "note"; //  添加备注角色映射
-    roles[static_cast<int>(MessageRoles::AvatarPathRole)] = "avatarPath"; //  添加头像路径角色映射
-    roles[static_cast<int>(MessageRoles::MessageRole)] = "message";//  添加消息角色映射
-    roles[static_cast<int>(MessageRoles::TimeRole)] = "time";//  添加时间角色映射
-    roles[static_cast<int>(MessageRoles::SenderIDRole)] = "id";//  添加ID角色映射
+    roles[static_cast<int>(MessageRol::NoteRole)] = "note"; //  添加备注角色映射
+    roles[static_cast<int>(MessageRol::AvatarPathRole)] = "avatarPath"; //  添加头像路径角色映射
+    roles[static_cast<int>(MessageRol::MessageRole)] = "message";//  添加消息角色映射
+    roles[static_cast<int>(MessageRol::TimeRole)] = "time";//  添加时间角色映射
+    roles[static_cast<int>(MessageRol::SenderIDRole)] = "id";//  添加ID角色映射
     return roles; //  返回填充好的角色名称映射哈希表
 }
 
-void MessageModel::addMessage(const Model_Message &message)
+void MessageModel::addMessage(const MessageMod &message)
 { //  添加消息到模型中的实现函数
     beginInsertRows(QModelIndex(), rowCount(), rowCount()); //  通知视图即将插入新行，插入位置为当前最后一行之后
     m_messages.append(message); //  将新的消息添加到消息列表末尾
@@ -61,7 +61,7 @@ void MessageModel::addMessage(const Model_Message &message)
 
 void MessageModel::addMessage(const QString &note, const QString &avatarPath, const QString &message, const QDateTime &time, const QString &id)
 {
-    Model_Message newMessage{ note, avatarPath, message, time, id }; //  创建一个Model_Message对象，并使用传入的参数进行初始化
+    MessageMod newMessage{ note, avatarPath, message, time, id }; //  创建一个MessageMod对象，并使用传入的参数进行初始化
     beginInsertRows(QModelIndex(), rowCount(), rowCount()); //  通知视图即将插入新行
     m_messages.append(newMessage); //  将新的消息添加到消息列表末尾
     endInsertRows(); //  通知视图插入行操作完成

@@ -4,39 +4,39 @@
 #include <QWidget>
 #include <QStackedWidget>
 #include <QTimer>
-
+#include <QPointer>
 
 class LoginWindow;
 class ChatWindow;
+class EventBus;
 class NetworkManager;
-class QThread;
+class DatabaseManager;
 
 class MainWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(EventBus *eventBus, NetworkManager *networkManager, DatabaseManager *databaseManager, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
     // 登录成功，切换到聊天窗口
-    void onUserLoggedIn(const QString &userID, const QString &password);
+    void onUserLoggedIn(const QString &userID);
     // 用户退出登录，返回登录窗口
-    void onUserLoggedOut();
+    void onUserLoggedOut(const QString &userId);
 
 private:
     void initializeUI();     // 初始化UI
     void connectSignals();   // 连接信号槽
-    void linkServer();// 连接服务器
-    void setWindowStyle();// 设置窗口样式
 
 private:
     QStackedWidget *stackedWidget;  // 用于页面切换的栈式窗口
-    LoginWindow *loginWindow;        // 登录页面
-    ChatWindow *chatWindow;          // 聊天页面
-    NetworkManager *networkManager;  // 全局网络管理器
-    QThread *networkThread;          // 网络线程
+    LoginWindow *loginWindow;        // 登录注册页面
+    QPointer<ChatWindow> chatWindow; // 聊天页面（动态创建/销毁，使用智能指针）
+    QPointer<EventBus> eventBus;     // 事件总线（外部传入，使用智能指针防止悬空）
+    QPointer<NetworkManager> networkManager;  // 网络管理器（外部传入）
+    QPointer<DatabaseManager> databaseManager; // 数据库管理器（外部传入）
 };
 
 #endif // MAINWINDOW_H

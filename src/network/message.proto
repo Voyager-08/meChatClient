@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package mechat;
+
+// 消息类型枚举
+enum MessageType {
+    UNKNOWN = 0;
+    MESSAGE = 1;              // 聊天消息
+    LOGIN_REQUEST = 2;        // 登录请求
+    LOGIN_RESULT = 3;         // 登录结果
+    REGISTER_REQUEST = 4;     // 注册请求
+    REGISTER_RESULT = 5;      // 注册结果
+    USER_INFO_REQUEST = 6;    // 用户信息请求
+    USER_INFO = 7;            // 用户信息
+    FRIEND_LIST_REQUEST = 8;  // 好友列表请求
+    FRIEND_LIST = 9;          // 好友列表
+    HEARTBEAT = 10;           // 心跳
+    HEARTBEAT_RESPONSE = 11;  // 心跳响应
+    SEARCH_FRIEND = 12;       // 搜索好友
+    SEARCH_FRIEND_LIST = 13;  // 搜索好友结果
+    ADD_FRIEND = 14;          // 添加好友
+    ADD_FRIEND_RESULT = 15;   // 添加好友结果
+    DELETE_FRIEND = 16;       // 删除好友
+    DELETE_FRIEND_RESULT = 17;// 删除好友结果
+    USER_STATUS = 18;         // 用户状态变更
+    AVATAR_REQUEST = 19;      // 头像请求
+    AVATAR_DATA = 20;         // 头像数据
+    OFFLINE_MESSAGE = 21;     // 离线消息
+}
+
+// 聊天消息
+message ChatMessage {
+    string sender = 1;
+    string receiver = 2;
+    string content = 3;
+    string timestamp = 4;
+}
+
+// 登录请求
+message LoginRequest {
+    string user_id = 1;
+    string password = 2;
+}
+
+// 登录结果
+message LoginResult {
+    bool result = 1;
+    string user_id = 2;
+    string reason = 3;
+}
+
+// 注册请求
+message RegisterRequest {
+    string user_id = 1;
+    string user_nick = 2;
+    string password = 3;
+}
+
+// 注册结果
+message RegisterResult {
+    bool result = 1;
+    string user_id = 2;
+    string reason = 3;
+}
+
+// 用户信息请求
+message UserInfoRequest {
+    string user_id = 1;
+}
+
+// 用户信息
+message UserInfo {
+    string user_id = 1;
+    string user_nick = 2;
+    string user_motto = 3;
+    string user_status = 4;
+    string user_email = 5;
+    string user_registration_date = 6;
+    int32 user_sex = 7;
+}
+
+// 好友列表请求
+message FriendListRequest {
+    string user_id = 1;
+}
+
+// 好友信息
+message FriendInfo {
+    string friend_id = 1;
+    string friend_nick = 2;
+    string friend_note = 3;
+    string motto = 4;
+    string email = 5;
+}
+
+// 好友列表
+message FriendList {
+    repeated FriendInfo friends = 1;
+}
+
+// 心跳
+message Heartbeat {
+    string user_id = 1;
+}
+
+// 心跳响应
+message HeartbeatResponse {
+    string user_id = 1;
+}
+
+// 搜索好友
+message SearchFriend {
+    string text = 1;
+}
+
+// 搜索好友结果
+message SearchFriendList {
+    bool result = 1;
+    repeated FriendInfo friends = 2;
+}
+
+// 添加好友
+message AddFriend {
+    string friend_id = 1;
+}
+
+// 添加好友结果
+message AddFriendResult {
+    bool result = 1;
+    string friend_id = 2;
+    string friend_nick = 3;
+    string reason = 4;
+}
+
+// 删除好友
+message DeleteFriend {
+    string friend_id = 1;
+}
+
+// 删除好友结果
+message DeleteFriendResult {
+    bool result = 1;
+    string friend_id = 2;
+}
+
+// 用户状态变更
+message UserStatus {
+    string user_id = 1;
+    bool online = 2;
+}
+
+// 头像请求
+message AvatarRequest {
+    string user_id = 1;
+}
+
+// 头像数据
+message AvatarData {
+    string user_id = 1;
+    bytes avatar_data = 2;
+}
+
+// 离线消息
+message OfflineMessage {
+    repeated ChatMessage messages = 1;
+}
+
+// 通用消息包装器
+message Packet {
+    MessageType type = 1;
+    oneof payload {
+        ChatMessage chat_message = 2;
+        LoginRequest login_request = 3;
+        LoginResult login_result = 4;
+        RegisterRequest register_request = 5;
+        RegisterResult register_result = 6;
+        UserInfoRequest user_info_request = 7;
+        UserInfo user_info = 8;
+        FriendListRequest friend_list_request = 9;
+        FriendList friend_list = 10;
+        Heartbeat heartbeat = 11;
+        HeartbeatResponse heartbeat_response = 12;
+        SearchFriend search_friend = 13;
+        SearchFriendList search_friend_list = 14;
+        AddFriend add_friend = 15;
+        AddFriendResult add_friend_result = 16;
+        DeleteFriend delete_friend = 17;
+        DeleteFriendResult delete_friend_result = 18;
+        UserStatus user_status = 19;
+        AvatarRequest avatar_request = 20;
+        AvatarData avatar_data = 21;
+        OfflineMessage offline_message = 22;
+    }
+}

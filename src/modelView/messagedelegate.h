@@ -4,6 +4,7 @@
 #include <QStyledItemDelegate>
 #include <QPixmap>
 #include <QCache>
+#include "src/custom/struct.h"
 
 class MessageDelegate : public QStyledItemDelegate
 {

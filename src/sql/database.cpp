@@ -1,27 +1,31 @@
 #include "database.h"
 #include <QFile>
 #include <QDir>
+#include <QUuid>
+#include <QSqlQuery>
+#include <QDebug>
+#include <QDateTime>
+#include <QSqlError>
 
 Database::Database()
 {
-    QSet<QString> connectionNames;
-    dbPath = QDir::currentPath() + "/sqlite/mechat.sqlite";
+    
 }
 
 Database::~Database()
 {
-    closeDatabase();
+    close();
+}
+
+QString Database::connectionName() const
+{
+    return m_connectionName;
 }
 
 void Database::connect(const QString &dbName)
 {
     // 生成唯一连接名（避免冲突）
     QString newConnectionName = "SQLITE_" + QUuid::createUuid().toString(QUuid::Id128).replace("{", "").replace("}", "").replace("-", "_");
-
-    // 如果已有同名连接（理论上不会，但安全起见），先移除
-    if (QSqlDatabase::contains(newConnectionName)) {
-        QSqlDatabase::removeDatabase(newConnectionName);
-    }
 
     // 创建新的 SQLite 连接
     db = QSqlDatabase::addDatabase("QSQLITE", newConnectionName);
@@ -51,60 +55,39 @@ void Database::connect(const QString &dbName)
 
 void Database::close()
 {
-    closeDatabase();
-}
-
-QString Database::connectionName() const
-{
-    return m_connectionName;
+    if (!m_connectionName.isEmpty()) {
+        //先关闭物理连接
+        if (db.isOpen()) {
+            db.close();
+        }
+        //将成员变量置为无效状态（解除对连接的引用）
+        db = QSqlDatabase();
+        //从全局注册表中移除（必须在所有副本销毁后调用）
+        QSqlDatabase::removeDatabase(m_connectionName);
+        m_connectionName.clear();
+        qDebug() << "SQLite数据库连接已删除";
+    }
 }
 
 bool Database::init()
 {
-    // 确保sqlite目录存在
-    QDir dir(QDir::currentPath() + "/sqlite");
-    if (!dir.exists()) {
-        if (!dir.mkpath(".")) {
-            qDebug() << "创建sqlite目录失败";
-            return false;
-        }
-    }
 
+    // 设置数据库路径
+    if (!setDbPath()) {
+        return false;
+    }
     // 连接数据库
     connect(dbPath);
-
+    //打开数据库
     if (!isOpen()) {
         return false;
     }
-
-    // 创建表
+    // 是否创建表，否则创建
     if (!createTables()) {
         return false;
     }
-
+    // 创建成功
     return true;
-}
-
-bool Database::openDatabase()
-{
-    // 已由 connect 方法处理
-    return isOpen();
-}
-
-void Database::closeDatabase()
-{
-    if (db.isOpen()) {
-        db.close();
-        qDebug() << "SQLite database connection:" << m_connectionName << "closed";
-    }
-
-    // 注意：在Qt中，removeDatabase必须在所有使用该连接的QSqlQuery对象销毁后调用
-    // 由于我们无法确定所有查询是否已完成，这里暂时不调用removeDatabase
-    // 让Qt在程序结束时自动清理
-    // if (!m_connectionName.isEmpty()) {
-    //     QSqlDatabase::removeDatabase(m_connectionName);
-    //     m_connectionName.clear();
-    // }
 }
 
 bool Database::createTables()
@@ -162,30 +145,42 @@ bool Database::createTables()
     return true;
 }
 
+bool Database::setDbPath()
+{
+    dbPath = QDir::currentPath() + "/sqlite/mechat.sqlite";
+    // 确保sqlite目录存在
+    QDir dir(QDir::currentPath() + "/sqlite");
+    if (!dir.exists()) {
+        if (!dir.mkpath(".")) {
+            qDebug() << "创建sqlite目录失败";
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Database::saveUserInfo(const UserInfo &userInfo)
 {
     QSqlQuery query(db);
 
-    // 检查用户是否存在
-    if (userExists(userInfo.userID)) {
-        // 更新用户信息
-        query.prepare("UPDATE users SET user_nick = ?, email = ?, motto = ?, avatar_path = ?, sex = ? WHERE user_id = ?");
-        query.addBindValue(userInfo.userNick);
-        query.addBindValue(userInfo.userEmail);
-        query.addBindValue(userInfo.userMotto);
-        query.addBindValue(userInfo.userAvatar);
-        query.addBindValue(static_cast<int>(userInfo.userSex));
-        query.addBindValue(userInfo.userID);
-    } else {
-        // 插入新用户
-        query.prepare("INSERT INTO users (user_id, user_nick, email, motto, avatar_path, sex) VALUES (?, ?, ?, ?, ?, ?)");
-        query.addBindValue(userInfo.userID);
-        query.addBindValue(userInfo.userNick);
-        query.addBindValue(userInfo.userEmail);
-        query.addBindValue(userInfo.userMotto);
-        query.addBindValue(userInfo.userAvatar);
-        query.addBindValue(static_cast<int>(userInfo.userSex));
-    }
+    // UPSERT: 插入新用户，若 user_id 冲突则更新指定字段
+    query.prepare(
+        "INSERT INTO users (user_id, user_nick, email, motto, avatar_path, sex) "
+        "VALUES (?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(user_id) DO UPDATE SET "
+        "  user_nick   = excluded.user_nick, "
+        "  email       = excluded.email, "
+        "  motto       = excluded.motto, "
+        "  avatar_path = excluded.avatar_path, "
+        "  sex         = excluded.sex"
+    );
+
+    query.addBindValue(userInfo.userID);
+    query.addBindValue(userInfo.userNick);
+    query.addBindValue(userInfo.userEmail);
+    query.addBindValue(userInfo.userMotto);
+    query.addBindValue(userInfo.userAvatar);
+    query.addBindValue(static_cast<int>(userInfo.userSex));
 
     if (!query.exec()) {
         qDebug() << "保存用户信息失败:" << query.lastError().text();
@@ -193,26 +188,6 @@ bool Database::saveUserInfo(const UserInfo &userInfo)
     }
 
     return true;
-}
-
-UserInfo Database::getUserInfo(const QString &userId)
-{
-    UserInfo userInfo;
-    userInfo.userID = userId;
-
-    QSqlQuery query(db);
-    query.prepare("SELECT user_nick, email, motto, avatar_path, sex FROM users WHERE user_id = ?");
-    query.addBindValue(userId);
-
-    if (query.exec() && query.next()) {
-        userInfo.userNick = query.value(0).toString();
-        userInfo.userEmail = query.value(1).toString();
-        userInfo.userMotto = query.value(2).toString();
-        userInfo.userAvatar = query.value(3).toString();
-        userInfo.userSex = static_cast<Sex>(query.value(4).toInt());
-    }
-
-    return userInfo;
 }
 
 bool Database::userExists(const QString &userId)
@@ -259,26 +234,6 @@ bool Database::saveFriendship(const QString &userId, const FriendInfo &friendInf
     return true;
 }
 
-QList<FriendInfo> Database::getFriendList(const QString &userId)
-{
-    QList<FriendInfo> friendList;
-
-    QSqlQuery query(db);
-    query.prepare("SELECT friend_id, friend_note FROM friendships WHERE user_id = ?");
-    query.addBindValue(userId);
-
-    if (query.exec()) {
-        while (query.next()) {
-            FriendInfo friendInfo;
-            friendInfo.friendId = query.value(0).toString();
-            friendInfo.friendNote = query.value(1).toString();
-            friendList.append(friendInfo);
-        }
-    }
-
-    return friendList;
-}
-
 bool Database::deleteFriendship(const QString &userId, const QString &friendId)
 {
     QSqlQuery query(db);
@@ -294,14 +249,14 @@ bool Database::deleteFriendship(const QString &userId, const QString &friendId)
     return true;
 }
 
-bool Database::saveMessage(const messageData &message)
+bool Database::saveMessage(const MessageInfo &messageInfo)
 {
     QSqlQuery query(db);
     query.prepare("INSERT INTO messages (sender_id, receiver_id, datetime, comment, message_type, is_read) VALUES (?, ?, ?, ?, ?, ?)");
-    query.addBindValue(message.senderId);
-    query.addBindValue(message.receiverId);
-    query.addBindValue(message.timestamp.toString(Qt::ISODate));
-    query.addBindValue(message.content);
+    query.addBindValue(messageInfo.senderId);
+    query.addBindValue(messageInfo.receiverId);
+    query.addBindValue(messageInfo.timestamp.toString(Qt::ISODate));
+    query.addBindValue(messageInfo.content);
     query.addBindValue("text");
     query.addBindValue(0);
 
@@ -311,31 +266,6 @@ bool Database::saveMessage(const messageData &message)
     }
 
     return true;
-}
-
-QList<messageData> Database::getMessages(const QString &userId, const QString &friendId)
-{
-    QList<messageData> messages;
-
-    QSqlQuery query(db);
-    query.prepare("SELECT sender_id, receiver_id, comment, datetime FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY datetime ASC");
-    query.addBindValue(userId);
-    query.addBindValue(friendId);
-    query.addBindValue(friendId);
-    query.addBindValue(userId);
-
-    if (query.exec()) {
-        while (query.next()) {
-            messageData message;
-            message.senderId = query.value(0).toString();
-            message.receiverId = query.value(1).toString();
-            message.content = query.value(2).toString();
-            message.timestamp = QDateTime::fromString(query.value(3).toString(), Qt::ISODate);
-            messages.append(message);
-        }
-    }
-
-    return messages;
 }
 
 bool Database::markMessageAsRead(const QString &messageId)
@@ -350,4 +280,69 @@ bool Database::markMessageAsRead(const QString &messageId)
     }
 
     return true;
+}
+
+QList<MessageInfo> Database::getMessages(const QString &userId, const QString &friendId)
+{
+    QList<MessageInfo> messageInfoList;
+
+    QSqlQuery query(db);
+    query.prepare("SELECT sender_id, receiver_id, comment, datetime FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY datetime ASC");
+    query.addBindValue(userId);
+    query.addBindValue(friendId);
+    query.addBindValue(friendId);
+    query.addBindValue(userId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            MessageInfo messageInfo;
+            messageInfo.senderId = query.value(0).toString();
+            messageInfo.receiverId = query.value(1).toString();
+            messageInfo.content = query.value(2).toString();
+            messageInfo.timestamp = QDateTime::fromString(query.value(3).toString(), Qt::ISODate);
+            messageInfoList.append(messageInfo);
+        }
+    }
+
+    return messageInfoList;
+}
+
+QList<FriendInfo> Database::getFriendList(const QString &userId)
+{
+    QList<FriendInfo> friendInfoList;
+
+    QSqlQuery query(db);
+    query.prepare("SELECT friend_id, friend_note FROM friendships WHERE user_id = ?");
+    query.addBindValue(userId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            FriendInfo friendInfo;
+            friendInfo.friendId = query.value(0).toString();
+            friendInfo.friendNote = query.value(1).toString();
+            friendInfoList.append(friendInfo);
+        }
+    }
+
+    return friendInfoList;
+}
+
+UserInfo Database::getUserInfo(const QString &userId)
+{
+    UserInfo userInfo;
+    userInfo.userID = userId;
+
+    QSqlQuery query(db);
+    query.prepare("SELECT user_nick, email, motto, avatar_path, sex FROM users WHERE user_id = ?");
+    query.addBindValue(userId);
+
+    if (query.exec() && query.next()) {
+        userInfo.userNick = query.value(0).toString();
+        userInfo.userEmail = query.value(1).toString();
+        userInfo.userMotto = query.value(2).toString();
+        userInfo.userAvatar = query.value(3).toString();
+        userInfo.userSex = static_cast<Sex>(query.value(4).toInt());
+    }
+
+    return userInfo;
 }

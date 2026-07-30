@@ -28,4 +28,4 @@ private:
     mutable QHash<QString, QPixmap> m_avatarCache;
 };
 
-#endif // MESSAGEDELEGATE_H
+#endif // CONTACTDELEGATE_H

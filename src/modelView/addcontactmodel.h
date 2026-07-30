@@ -17,12 +17,12 @@ public:
     QHash<int, QByteArray> roleNames() const override;//返回角色名称映射
 
 public:
-    void addContact(const Model_Contact &contact);//添加联系人
+    void addContact(const ContactMod &contact);//添加联系人
     void addContact(const QString &name, const QString &avatarPath,const QString &id);//添加联系人重载
     void clearContacts();//清空联系人列表
 
 private:
-    QList<Model_Contact> m_contacts;//联系人列表
+    QList<ContactMod> m_contacts;//联系人列表
 };
 
 #endif // ADDCONTACTMODEL_H

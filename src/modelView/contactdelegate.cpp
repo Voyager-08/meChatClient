@@ -53,11 +53,9 @@ void ContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
         painter->drawLine(fullRect.left() + 1, fullRect.bottom() - 1, fullRect.right() - 1, fullRect.bottom() - 1);
     }
     
-    
-    
     // 获取数据
     QString note = index.data(Qt::DisplayRole).toString();
-    QString avatarPath = index.data(static_cast<int>(ContactRoles::AvatarPathRole)).toString();
+    QString avatarPath = index.data(static_cast<int>(ContactRol::AvatarPathRole)).toString();
 
     // 定义绘制区域
     QRect contentRect = option.rect.adjusted(10, 5, -10, -5);//调整矩形区域，使其左边界向右偏移10像素，上边界向下偏移5像素，右边界向左偏移10像素，下边界向上偏移5像素

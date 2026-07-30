@@ -33,9 +33,9 @@ void AddContactDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
     }
     
     // 获取数据
-    QString name = index.data(static_cast<int>(ContactRoles::NameRole)).toString();
-    QString id = index.data(static_cast<int>(ContactRoles::IDRole)).toString();
-    QString avatarPath = index.data(static_cast<int>(ContactRoles::AvatarPathRole)).toString();
+    QString name = index.data(static_cast<int>(ContactRol::NameRole)).toString();
+    QString id = index.data(static_cast<int>(ContactRol::IDRole)).toString();
+    QString avatarPath = index.data(static_cast<int>(ContactRol::AvatarPathRole)).toString();
 
     // 定义绘制区域
     QRect contentRect = option.rect.adjusted(10, 5, -100, -5); // 右侧留出按钮空间

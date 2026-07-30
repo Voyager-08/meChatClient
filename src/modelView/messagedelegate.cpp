@@ -69,12 +69,12 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     }
     
     // 2. 获取数据
-    QString note = index.data(static_cast<int>(MessageRoles::NoteRole)).toString();
-    QString avatarPath = index.data(static_cast<int>(MessageRoles::AvatarPathRole)).toString();
-    QString message = index.data(static_cast<int>(MessageRoles::MessageRole)).toString();
-    QDateTime time = index.data(static_cast<int>(MessageRoles::TimeRole)).toDateTime();
-    QString senderID = index.data(static_cast<int>(MessageRoles::SenderIDRole)).toString();
-
+    QString note = index.data(static_cast<int>(MessageRol::NoteRole)).toString();
+    QString avatarPath = index.data(static_cast<int>(MessageRol::AvatarPathRole)).toString();
+    QString message = index.data(static_cast<int>(MessageRol::MessageRole)).toString();
+    QDateTime time = index.data(static_cast<int>(MessageRol::TimeRole)).toDateTime();
+    QString senderID = index.data(static_cast<int>(MessageRol::SenderIDRole)).toString();
+    
     // 3. 布局参数
     const int avatarSize = 50; //  头像的大小
     const int spacing = 3; //  元素之间的间距

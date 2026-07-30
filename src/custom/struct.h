@@ -6,7 +6,7 @@
 #include <QDateTime>
 #include <QMetaType>
 
-namespace MeChat {
+namespace chat {
 
 // 自定义枚举类型
 enum class Sex { other = 0, male = 1, female = 2 };
@@ -35,7 +35,7 @@ struct FriendInfo {
 };
 
 // 网络数据结构体
-struct messageData {
+struct MessageInfo {
     QString senderId;
     QString receiverId;
     QString content;
@@ -45,15 +45,16 @@ struct messageData {
 // 内联函数：注册自定义类型
 inline void registerCustomTypes()
 {
-    qRegisterMetaType<FriendInfo>("MeChat::FriendInfo");
-    qRegisterMetaType<messageData>("MeChat::messageData");
+    qRegisterMetaType<UserInfo>("chat::UserInfo");
+    qRegisterMetaType<FriendInfo>("chat::FriendInfo");
+    qRegisterMetaType<MessageInfo>("chat::MessageInfo");
 }
 
-} // namespace MeChat
+} // namespace chat
 
 // 全局命名空间中的类型定义（用于Model/View系统）
 // 消息模型结构体
-struct Model_Message {
+struct MessageMod {
     QString note;
     QString avatarPath;
     QString message;
@@ -62,7 +63,7 @@ struct Model_Message {
 };
 
 // 消息角色枚举
-enum class MessageRoles {
+enum class MessageRol {
     NoteRole = Qt::UserRole + 1,
     AvatarPathRole = Qt::UserRole + 2,
     MessageRole = Qt::UserRole + 3,
@@ -71,14 +72,14 @@ enum class MessageRoles {
 };
 
 // 联系人模型结构体
-struct Model_Contact {
+struct ContactMod {
     QString name;
     QString avatarPath;
     QString id;
 };
 
 // 联系人角色枚举
-enum class ContactRoles {
+enum class ContactRol {
     NameRole = Qt::UserRole + 1,
     AvatarPathRole = Qt::UserRole + 2,
     IDRole = Qt::UserRole + 3
