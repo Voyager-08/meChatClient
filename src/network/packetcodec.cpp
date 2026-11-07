@@ -13,6 +13,10 @@ QByteArray PacketCodec::pack(const mechat::Packet &packet)//protobuf打包消息
         qWarning() << "Protobuf serialization failed";
         return QByteArray();
     }
+    if (body.empty() || body.size() > MAX_PAYLOAD_SIZE) {
+        qWarning() << "Protobuf payload is empty or exceeds the protocol limit";
+        return QByteArray();
+    }
 
     QByteArray bodyArray(body.data(), static_cast<int>(body.size()));//将Protobuf消息转换为QByteArray
     uint32_t payloadLen = static_cast<uint32_t>(bodyArray.size());//包体长度
@@ -24,7 +28,7 @@ QByteArray PacketCodec::pack(const mechat::Packet &packet)//protobuf打包消息
 
     writeUint16(result, MAGIC_NUM);//魔数
     writeUint32(result, payloadLen);//包体长度
-    writeUint16(result, crc);//CRC16
+    writeUint16(result, crc);//CRC16校验码，处理文件是否完整
     result.append(bodyArray);//包体
 
     return result;

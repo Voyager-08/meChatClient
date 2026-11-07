@@ -39,9 +39,9 @@ int main(int argc, char *argv[])
     
     // 等待线程退出
     networkThread.quit();
-    networkThread.wait();
+    networkThread.wait(3000);
     dataLoaderThread.quit();
-    dataLoaderThread.wait();
+    dataLoaderThread.wait(3000);
 
     return ret;
 }

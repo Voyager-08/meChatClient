@@ -15,9 +15,9 @@
  * | 2 bytes  |  4 bytes   | 2 bytes | N bytes |
  * +----------+------------+---------+---------+
  * 
- * - MagicNum: 魔数 0xABCD，用于快速识别合法数据包
+ * - MagicNum: 魔数 0xABCD，用于快速识别合法数据包，判断是不是我们的协议
  * - PayloadLen: Body 长度（4字节，大端序）
- * - CRC16: Body 的 CRC16 校验码（2字节）
+ * - CRC16: Body 的 CRC16 校验码（2字节），用于数据完整性校验
  * - Body: Protobuf 序列化的 Packet 数据
  */
 class PacketCodec

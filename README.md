@@ -124,3 +124,27 @@ src/
 - **依赖倒置原则（DIP）**: 高层模块不依赖低层模块，都依赖抽象（信号接口）
 - **接口隔离原则（ISP）**: EventBus 提供细粒度的信号接口
 
+## Windows 客户端部署
+
+客户端运行在 Windows，使用 Qt 6、C++17 和 Protobuf。构建环境需要 CMake、对应编译器，以及 Qt 6 的 Core、Widgets、Sql、Network 模块和 Protobuf（含 `protoc`、C++ runtime）。CMake 使用系统/工具链中的包配置，不再依赖开发机上的固定盘符路径。
+
+```powershell
+cmake -S . -B build -DCMAKE_PREFIX_PATH="C:\Qt\6.5.3\mingw_64;C:\deps\protobuf"
+cmake --build build --config Release
+```
+
+使用 Visual Studio 时，请将 `CMAKE_PREFIX_PATH` 指向匹配 MSVC 的 Qt 和 Protobuf 安装。发布时在 Qt 命令提示符中运行 `windeployqt --release --sql qsqlite .\build\bin\meChatClient.exe`，并确认 Qt 的 SQLite SQL driver（`sqldrivers\qsqlite.dll`）随包分发。
+
+客户端连接地址通过环境变量配置；默认是本机 `127.0.0.1:6452`，部署到其他机器时必须将 host 设置为 Linux 服务器可访问的 IP/DNS：
+
+```powershell
+$env:MECHAT_SERVER_HOST = "192.0.2.10"
+$env:MECHAT_SERVER_PORT = "6452"
+.\build\bin\meChatClient.exe
+```
+
+## 与 Linux 服务端的协议
+
+客户端通过 TCP 长连接通信，双方使用 `src/network/message.proto` 定义的 Protobuf `Packet`。每帧为 8 字节头部和 Protobuf body：Magic `0xABCD`（2 字节，大端）、body 长度（4 字节，大端）、CRC16/Modbus（2 字节，大端）和 body。服务端的协议定义位于 `../meChatServer/src/protocol/message.proto`；新增或变更消息时必须同步两份定义并重新构建两端。当前支持登录/注册、用户资料、好友列表与管理、聊天、心跳、离线消息和头像传输。
+
+Linux 服务端构建、启动、数据库初始化和防火墙配置见 [`../meChatServer/README.md`](../meChatServer/README.md)。

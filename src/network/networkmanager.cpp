@@ -6,7 +6,9 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QtEndian>
+#include <QTimer>
 
 #include "src/event/eventbus.h"
 
@@ -18,6 +20,8 @@ NetworkManager::NetworkManager(QObject *parent)
 
 void NetworkManager::initNetwork()
 {
+    if (m_socket)
+        return;
     m_socket = new QTcpSocket(this);
     connect(m_socket, &QTcpSocket::readyRead, this, &NetworkManager::onReadyRead);
     connect(m_socket, &QTcpSocket::errorOccurred, this, &NetworkManager::onError);
@@ -28,16 +32,22 @@ void NetworkManager::initNetwork()
 
 bool NetworkManager::isConnected() const
 {
-    if (m_socket->state() == QTcpSocket::ConnectedState) {
-        return true;
-    }
-    connectToServer();
-    return m_socket->state() == QTcpSocket::ConnectedState;
+    return m_socket && m_socket->state() == QTcpSocket::ConnectedState;
 }
 
-void NetworkManager::connectToServer() const
+void NetworkManager::connectToServer()
 {
-    m_socket->connectToHost("8.129.134.106", 6452);
+    if (!m_socket || m_socket->state() != QAbstractSocket::UnconnectedState)
+        return;
+
+    const QString host = qEnvironmentVariable("MECHAT_SERVER_HOST", "127.0.0.1").trimmed();
+    bool portOk = false;
+    const uint port = qEnvironmentVariable("MECHAT_SERVER_PORT", "6452").toUInt(&portOk);
+    if (host.isEmpty() || !portOk || port == 0 || port > 65535) {
+        emit errorOccurred("MECHAT_SERVER_HOST or MECHAT_SERVER_PORT is invalid");
+        return;
+    }
+    m_socket->connectToHost(host, static_cast<quint16>(port));
 }
 
 // ==================== 发送方法（Protobuf 序列化） ====================
@@ -62,7 +72,7 @@ void NetworkManager::sendMessage(const MessageInfo &messageInfo)
 
 void NetworkManager::sendLoginRequest(const QString &userId, const QString &password)
 {
-    if (!isConnected()) {
+    if (!isConnected() && (!m_socket || m_socket->state() != QAbstractSocket::ConnectingState)) {
         qDebug() << "登录请求发送失败！";
         emit loginFailed("网络未连接！");
         return;
@@ -83,9 +93,8 @@ void NetworkManager::sendLogoutRequest(const QString &userId)
         return;
     }
     mechat::Packet packet;
-    packet.set_type(mechat::HEARTBEAT); // 复用心跳结构作为登出通知
-    auto *hb = packet.mutable_heartbeat();
-    hb->set_user_id(userId.toStdString());
+    packet.set_type(mechat::LOGOUT_REQUEST);
+    packet.mutable_logout_request()->set_user_id(userId.toStdString());
     sendRawData(packet);
 }
 
@@ -119,7 +128,7 @@ void NetworkManager::sendFriendRequest(const QString &userId)
 
 void NetworkManager::sendRegisterRequest(const QString &userId, const QString &userNick, const QString &password)
 {
-    if (!isConnected()) {
+    if (!isConnected() && (!m_socket || m_socket->state() != QAbstractSocket::ConnectingState)) {
         qDebug() << "注册请求发送失败！";
         emit registerFailed("网络未连接！");
         return;
@@ -221,13 +230,21 @@ void NetworkManager::sendHeartbeatMessage(const QString &userId)
 
 bool NetworkManager::sendRawData(const mechat::Packet &packet)
 {
-    if (!isConnected()) {
-        qDebug() << "网络未连接，无法发送数据！";
+    if (!m_socket) {
+        qDebug() << "网络套接字尚未初始化！";
         return false;
     }
     QByteArray packetData = m_codec.pack(packet);
     if (packetData.isEmpty()) {
         qDebug() << "数据包打包失败！";
+        return false;
+    }
+    if (m_socket->state() == QAbstractSocket::ConnectingState) {
+        m_pendingWrites.append(packetData);
+        return true;
+    }
+    if (!isConnected()) {
+        qDebug() << "网络未连接，无法发送数据！";
         return false;
     }
     qint64 bytesWritten = m_socket->write(packetData);
@@ -244,19 +261,30 @@ bool NetworkManager::sendRawData(const mechat::Packet &packet)
 void NetworkManager::onConnected()
 {
     qDebug() << "已连接到服务器！";
+    for (const QByteArray &frame : m_pendingWrites) {
+        if (m_socket->write(frame) != frame.size()) {
+            m_pendingWrites.clear();
+            emit errorOccurred("发送连接期间排队的数据失败");
+            return;
+        }
+    }
+    m_pendingWrites.clear();
     emit connected();
 }
 
 void NetworkManager::onDisconnected()
 {
     qDebug() << "服务器已断开！";
+    m_codec.clearBuffer();
     emit errorOccurred("服务器已断开！");
+    QTimer::singleShot(2000, this, &NetworkManager::connectToServer);
 }
 
 void NetworkManager::onError()
 {
     qDebug() << "网络错误:" << m_socket->errorString();
     emit error(m_socket->errorString());
+    QTimer::singleShot(2000, this, &NetworkManager::connectToServer);
 }
 
 // ==================== 接收数据（二进制解包 + Protobuf 反序列化） ====================
@@ -273,7 +301,6 @@ void NetworkManager::onReadyRead()
 
     for (const mechat::Packet &packet : packets) {
         mechat::MessageType msgType = packet.type();
-        qDebug() << "解析消息类型:" << static_cast<int>(msgType);
 
         switch (msgType) {
         case mechat::MESSAGE: {
@@ -415,14 +442,15 @@ void NetworkManager::onReadyRead()
             QString avatarPath = QDir::currentPath() + "/images/avatar/" + userId + ".png";
             if (!QFile::exists(avatarPath)) {
                 QByteArray avatarData(avatar.avatar_data().data(), static_cast<int>(avatar.avatar_data().size()));
+                QDir().mkpath(QFileInfo(avatarPath).absolutePath());
                 QFile avatarFile(avatarPath);
-                avatarFile.open(QIODevice::WriteOnly);
-                avatarFile.write(avatarData);
-                avatarFile.close();
+                if (!avatarFile.open(QIODevice::WriteOnly) || avatarFile.write(avatarData) != avatarData.size()) {
+                    qWarning() << "Unable to save avatar:" << avatarFile.errorString();
+                    break;
+                }
                 qDebug() << "收到消息类型为AVATAR_DATA的消息";
                 qDebug() << "保存头像到文件:" << avatarPath;
             }
-            qDebug() << "头像文件已存在";
             break;
         }
         case mechat::DELETE_FRIEND_RESULT: {

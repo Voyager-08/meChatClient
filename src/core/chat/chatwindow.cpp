@@ -48,8 +48,11 @@ ChatWindow::ChatWindow(QString userID,QWidget *parent)
 
 void ChatWindow::startDataLoading()
 {
-    // 发送加载本地数据信号（用户信息 → 好友列表 → 好友消息）
+    // 请求网络用户信息（此时 EventBus 已绑定）
+    qDebug() << "发送用户信息请求";
+    emit sendUserInfoRequest(userInfo->userID);
     emit loadLocalDataRequest(userInfo->userID);
+    emit sendFriendListRequest(userInfo->userID);
 }
 
 ChatWindow::~ChatWindow()
@@ -617,9 +620,6 @@ void ChatWindow::initialUserInfo(QString userID)//初始化用户信息
     userInfo->userID = userID;
     userInfo->userAvatar = "./images/avatar/"+userID+".png";
     qDebug() << "userAvatar:" << userInfo->userAvatar;
-    //请求用户信息 - 通过信号转发给 EventBus
-    qDebug()<<"发送用户信息请求";
-    emit sendUserInfoRequest(userID);
 }
 
 void ChatWindow::initialModelView()//初始化模型视图
@@ -647,8 +647,6 @@ void ChatWindow::initialModelView()//初始化模型视图
         this, &ChatWindow::contextMenuRequested);
     // 连接双击信号到槽函数
     connect(ui->contactListView, &QListView::doubleClicked, this, &ChatWindow::clickDoubleContactList);
-    //请求好友列表 - 通过信号转发给 EventBus
-    emit sendFriendListRequest(userInfo->userID);
 }
 // 用于页面切换动画的函数
 void ChatWindow::animatePageTransition(QWidget *widget)
@@ -987,6 +985,7 @@ void ChatWindow::onAddFriend()// 添加联系人
     
     // 点击添加好友按钮
     connect(&addFriendDelegate, &AddContactDelegate::addButtonClicked, this, [&](const QModelIndex &index){
+        addContactModel->clearContacts();
         QString friendId = index.data(static_cast<int>(ContactRol::IDRole)).toString();
         if (!friendId.isEmpty()) {
             emit sendAddFriendRequest(friendId);//发送添加好友信号
@@ -1003,17 +1002,24 @@ void ChatWindow::onAddFriend()// 添加联系人
     
     // 回车事件搜索好友
     connect(&addFriendEdit, &QLineEdit::returnPressed, this, [this, &addFriendEdit](){
+        addContactModel->clearContacts();
         if (!addFriendEdit.text().isEmpty()) {
             emit sendSearchFriendRequest(addFriendEdit.text());
         }
     });
     // 点击搜索按钮搜索好友
     connect(&searchButton, &QPushButton::clicked, this, [this, &addFriendEdit](){
+        addContactModel->clearContacts();
         if (!addFriendEdit.text().isEmpty()) {
             emit sendSearchFriendRequest(addFriendEdit.text());
         }
     });
-
+    //更新搜索好友列表
+    connect(this, &ChatWindow::receiveAddFriendList, this, [=](const QString &friendId,const QString &friendNick){
+        QString avatarPath="./images/avatar/"+friendId+ ".png";//头像路径
+        addContactModel->addContact(friendId,avatarPath,friendNick);
+    });
+    
     dialog.setModal(true);// 设置为模态对话框
     dialog.exec();
 }

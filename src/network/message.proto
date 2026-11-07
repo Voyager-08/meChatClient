@@ -26,6 +26,7 @@ enum MessageType {
     AVATAR_REQUEST = 19;      // 头像请求
     AVATAR_DATA = 20;         // 头像数据
     OFFLINE_MESSAGE = 21;     // 离线消息
+    LOGOUT_REQUEST = 22;      // 退出登录请求
 }
 
 // 聊天消息
@@ -165,6 +166,11 @@ message OfflineMessage {
     repeated ChatMessage messages = 1;
 }
 
+// 退出登录请求
+message LogoutRequest {
+    string user_id = 1;
+}
+
 // 通用消息包装器
 message Packet {
     MessageType type = 1;
@@ -190,5 +196,6 @@ message Packet {
         AvatarRequest avatar_request = 20;
         AvatarData avatar_data = 21;
         OfflineMessage offline_message = 22;
+        LogoutRequest logout_request = 23;
     }
 }

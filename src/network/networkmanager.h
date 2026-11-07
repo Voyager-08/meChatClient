@@ -2,6 +2,7 @@
 #define NETWORKMANAGER_H
 
 #include <QObject>
+#include <QList>
 #include "src/custom/struct.h"
 #include "packetcodec.h"
 
@@ -18,7 +19,7 @@ public:
 
 public slots:
     void initNetwork();// 初始化网络管理器
-    void connectToServer() const;// 连接到服务器
+    void connectToServer();// 连接到服务器
     void sendAvatarFile(const QString &filePath, const QString &userId); // 发送头像文件到服务器
     void sendHeartbeatMessage(const QString &userId); // 发送心跳消息
     void sendMessage(const MessageInfo &messageInfo); // 发送消息结构体
@@ -58,8 +59,9 @@ private slots:
     void onConnected(); // 处理连接成功
 
 private:
-    QTcpSocket *m_socket;//用于客户端网络通信的TCP套接字,裸指针
+    QTcpSocket *m_socket = nullptr;//用于客户端网络通信的TCP套接字
     PacketCodec m_codec; // 二进制协议编解码器
+    QList<QByteArray> m_pendingWrites;
 };
 
 #endif // NETWORKMANAGER_H

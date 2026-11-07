@@ -1,14 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-# === MinGW Protobuf 路径 ===
-if(WIN32)
-    set(Protobuf_INCLUDE_DIR "D:/QT/QtFiles/protobuf-mingw/include")
-    set(Protobuf_INCLUDE_DIRS "D:/QT/QtFiles/protobuf-mingw/include")
-    set(Protobuf_LIBRARY "D:/QT/QtFiles/protobuf-mingw/lib/libprotobuf.a")
-    set(Protobuf_LIBRARIES "D:/QT/QtFiles/protobuf-mingw/lib/libprotobuf.a")
-    set(Protobuf_PROTOC_EXECUTABLE "D:/QT/QtFiles/protobuf-mingw/bin/protoc.exe")
-endif()
-
 project(meChatClient VERSION 0.1 LANGUAGES CXX)
 
 # 设置默认构建类型为Release
@@ -23,53 +14,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# === Qt 路径（仅 Windows）===
-if(WIN32)
-    set(QT_ROOT "D:/QT/QT_x/6.5.3/mingw_64" CACHE PATH "Qt root")
-    list(APPEND CMAKE_PREFIX_PATH "${QT_ROOT}")
-endif()
-
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
+find_package(Protobuf REQUIRED)
 
 # ===================== Protobuf 生成 =====================
 set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/network)
-set(PROTO_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-
-file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
-
-add_custom_command(
-    OUTPUT
-        ${PROTO_GEN_DIR}/message.pb.h
-        ${PROTO_GEN_DIR}/message.pb.cc
-    COMMAND
-        ${Protobuf_PROTOC_EXECUTABLE}
-        --cpp_out=${PROTO_GEN_DIR}
-        -I${PROTO_SRC_DIR}
-        ${PROTO_SRC_DIR}/message.proto
-    DEPENDS
-        ${PROTO_SRC_DIR}/message.proto
-    COMMENT "Generating protobuf files"
-)
-
-# === MySQL 路径（仅 Windows）===
-if(WIN32)
-    set(MYSQL_ROOT_DIR "D:/QT/QtFiles/MySQL" CACHE PATH "MySQL root")
-    set(MYSQL_INCLUDE_DIR "${MYSQL_ROOT_DIR}/include")
-    set(LIBMYSQL_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libmysql.dll")
-    set(LIBCRYPTO_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libcrypto-3-x64.dll")
-    set(LIBSSL_DLL_PATH "${MYSQL_ROOT_DIR}/bin/libssl-3-x64.dll")
-    
-    if(NOT EXISTS "${MYSQL_INCLUDE_DIR}/mysql.h")
-        message(FATAL_ERROR "mysql.h not found!")
-    endif()
-    if(NOT EXISTS "${LIBMYSQL_DLL_PATH}")
-        message(FATAL_ERROR "libmysql.dll not found!")
-    endif()
-endif()
+protobuf_generate_cpp(PROTO_SOURCES PROTO_HEADERS "${PROTO_SRC_DIR}/message.proto")
 
 # === 可执行文件 ===
 add_executable(meChatClient
-    ${PROTO_GEN_DIR}/message.pb.cc
+    ${PROTO_SOURCES}
+    ${PROTO_HEADERS}
     src/main.cpp
     src/core/main/mainwindow.cpp
     src/core/main/mainwindow.h
@@ -112,37 +67,25 @@ add_executable(meChatClient
     resources.qrc
 )
 
-# 让 meChatClient 依赖 protobuf 生成完成
-add_custom_target(generate_protobuf
-    DEPENDS
-        ${PROTO_GEN_DIR}/message.pb.h
-        ${PROTO_GEN_DIR}/message.pb.cc
-)
-add_dependencies(meChatClient generate_protobuf)
-
 # === 包含目录 ===
 target_include_directories(meChatClient PRIVATE
     ${CMAKE_SOURCE_DIR}
-    ${PROTO_GEN_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Protobuf_INCLUDE_DIRS}
 )
 
-if(WIN32)
-    target_include_directories(meChatClient PRIVATE ${MYSQL_INCLUDE_DIR})
-endif()
-
 # === 链接库 ===
-target_link_libraries(meChatClient PRIVATE Qt6::Core Qt6::Widgets Qt6::Sql Qt6::Network)
-if(WIN32)
-    target_link_libraries(meChatClient PRIVATE "${Protobuf_LIBRARY}")
-else()
-    target_link_libraries(meChatClient PRIVATE protobuf::libprotobuf)
-endif()
+target_link_libraries(meChatClient PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Sql
+    Qt6::Network
+)
 
-# 链接 MySQL 库
-if(WIN32)
-    target_link_libraries(meChatClient PRIVATE "${MYSQL_ROOT_DIR}/lib/libmysql.lib")
+if(TARGET protobuf::libprotobuf)
+    target_link_libraries(meChatClient PRIVATE protobuf::libprotobuf)
+else()
+    target_link_libraries(meChatClient PRIVATE ${Protobuf_LIBRARIES})
 endif()
 
 # === 输出目录：统一放到 <build-dir>/bin 下 ===
@@ -174,102 +117,6 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 endif()
 
-
-# === Windows: 自动复制运行时依赖 ===
-if(WIN32)
-    # 1. 复制 libmysql.dll 到 bin/
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${LIBMYSQL_DLL_PATH}" 
-            "$<TARGET_FILE_DIR:meChatClient>/libmysql.dll"
-        COMMENT "Copy libmysql.dll to output dir"
-    )
-
-    # 2. 创建 sqldrivers 目录
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers"
-    )
-
-    # 3. 根据实际构建配置（Debug/Release）复制对应的驱动
-    set(QT_PLUGIN_DIR "${QT_ROOT}/plugins/sqldrivers")
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_PLUGIN_DIR}/qsqlmysql.dll"
-            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlmysql.dll"
-        COMMENT "Copy Qt MySQL driver"
-    )
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_PLUGIN_DIR}/qsqlmysqld.dll"
-            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlmysqld.dll"
-        COMMENT "Copy Qt MySQL driver (Debug)"
-    )
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_PLUGIN_DIR}/qsqlite.dll"
-            "$<TARGET_FILE_DIR:meChatClient>/sqldrivers/qsqlite.dll"
-        COMMENT "Copy Qt SQLite driver"
-    )
-
-    # 4. 复制平台插件
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:meChatClient>/platforms"
-    )
-    set(QWINDOWS_DLL "${QT_ROOT}/plugins/platforms/qwindows.dll")
-    if(EXISTS "${QWINDOWS_DLL}")
-        add_custom_command(TARGET meChatClient POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${QWINDOWS_DLL}"
-                "$<TARGET_FILE_DIR:meChatClient>/platforms/qwindows.dll"
-            COMMENT "Copy qwindows.dll"
-        )
-    endif()
-    
-    # 5. 复制 libssl-3-x64.dll 和 libcrypto-3-x64.dll
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${LIBSSL_DLL_PATH}"
-            "$<TARGET_FILE_DIR:meChatClient>/libssl-3-x64.dll"
-        COMMENT "Copy libssl-3-x64.dll to output dir"
-    )
-
-    add_custom_command(TARGET meChatClient POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${LIBCRYPTO_DLL_PATH}"
-            "$<TARGET_FILE_DIR:meChatClient>/libcrypto-3-x64.dll"
-        COMMENT "Copy libcrypto-3-x64.dll to output dir"
-    )
-
-    # 6. 复制 MinGW 运行时（可选）
-    if(CMAKE_COMPILER_IS_GNUCXX OR MINGW)
-        foreach(rt_dll libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll)
-            set(src "${QT_ROOT}/bin/${rt_dll}")
-            if(EXISTS "${src}")
-                add_custom_command(TARGET meChatClient POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${src}"
-                        "$<TARGET_FILE_DIR:meChatClient>/${rt_dll}"
-                    COMMENT "Copy ${rt_dll}"
-                )
-            endif()
-        endforeach()
-    endif()
-
-    # 7. 复制 Qt 核心库（开发环境需要）
-    set(QT_BIN_DIR "${QT_ROOT}/bin")
-    foreach(qt_dll Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Sql.dll Qt6Network.dll)
-        if(EXISTS "${QT_BIN_DIR}/${qt_dll}")
-            add_custom_command(TARGET meChatClient POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${QT_BIN_DIR}/${qt_dll}"
-                    "$<TARGET_FILE_DIR:meChatClient>/${qt_dll}"
-                COMMENT "Copy ${qt_dll}"
-            )
-        endif()
-    endforeach()
-endif()
 
 # 在构建时创建 images/avatar 目录
 if(WIN32)
